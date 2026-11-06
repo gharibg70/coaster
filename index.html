@@ -50,7 +50,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dayStr = n => new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA', {timeZone: 'Asia/Baghdad'});
-const toMail = p => p.replace(/\D/g, '') + '@bus.app';
+const toMail = p => p.includes('@') ? p.trim() : p.replace(/\D/g, '') + '@bus.app';
 const ERR = {
   'invalid code': 'الرمز غير صحيح أو مستخدم من قبل.',
   'registration closed': 'انتهى وقت التسجيل لهذا اليوم.',
