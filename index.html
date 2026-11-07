@@ -41,6 +41,13 @@ pre{background:var(--bg);padding:10px;border-radius:8px;direction:ltr;text-align
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
 button.sm{padding:6px 12px;font-size:14px}
 button.dn{background:var(--dn);color:#fff}
+.ann{max-height:340px;overflow:auto;padding:2px}
+.day{text-align:center;margin:12px 0 6px}
+.day span{background:var(--bd);color:var(--mu);font-size:13px;padding:2px 12px;border-radius:12px}
+.bub{background:var(--bg);border:1px solid var(--bd);border-inline-start:4px solid var(--pr);border-radius:10px;padding:8px 12px;margin:6px 0;max-width:92%}
+.bub small{display:block;color:var(--mu);font-size:12px}
+.bub time{display:block;text-align:end;color:var(--mu);font-size:12px}
+.badge{background:var(--dn);color:#fff;border-radius:10px;padding:0 8px;font-size:13px;margin-inline-start:6px}
 </style>
 </head>
 <body>
@@ -63,7 +70,9 @@ const ERR = {
   'Invalid login credentials': 'رقم الهاتف أو كلمة المرور غير صحيحة.',
   'User already registered': 'هذا الرقم مسجل مسبقاً. سجل الدخول.',
   'password too short': 'كلمة المرور قصيرة (6 أحرف على الأقل).',
-  'admin only': 'هذه العملية للأدمن فقط.'
+  'admin only': 'هذه العملية للأدمن فقط.',
+  'outbound full': 'مقاعد رحلة الذهاب ممتلئة.',
+  'return full': 'مقاعد رحلة العودة ممتلئة.'
 };
 function msg(t, bad) {
   const m = $('#msg'); m.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
@@ -114,26 +123,45 @@ async function signUp() {
 /* ---------- الطالب ---------- */
 const OPTS = [[true, true, 'أذهب وأرجع', 'دهوك إلى الموصل ثم العودة'], [true, false, 'أذهب فقط', 'دهوك إلى الموصل'],
               [false, true, 'أرجع فقط', 'الموصل إلى دهوك'], [false, false, 'لا أداوم', 'لا حجز لأي رحلة']];
+let ME = null;
+const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
 async function studentView(p) {
-  const {data: sub} = await sb.from('subscriptions').select('route_id,status').eq('user_id', p.id).maybeSingle();
+  ME = p;
+  const {data: sub} = await sb.from('subscriptions').select('route_id,status,end_date').eq('user_id', p.id).maybeSingle();
   if (!sub) {
     $('#app').innerHTML = `<div class="card"><h2>أهلاً ${esc(p.full_name)}</h2><p>لم يُفعّل اشتراكك بعد. أدخل رمز الاشتراك:</p>
     <input id="c" autocapitalize="characters" style="direction:ltr"><button onclick="redeem()">تفعيل الاشتراك</button></div>`;
     return;
   }
   const d = dayStr(1);
-  const [a, n, h] = await Promise.all([
-    sb.from('daily_attendance').select('outbound,return_trip').eq('user_id', p.id).eq('attendance_date', d).maybeSingle(),
-    sb.from('announcements').select('title,message,created_at').eq('is_active', true).order('created_at', {ascending: false}).limit(5),
-    sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', p.id).order('attendance_date', {ascending: false}).limit(14)]);
+  await sb.rpc('apply_defaults', {p_date: d});
+  const [a, n, h, w, st] = await Promise.all([
+    sb.from('daily_attendance').select('outbound,return_trip,auto').eq('user_id', p.id).eq('attendance_date', d).maybeSingle(),
+    sb.from('announcements').select('title,message,created_at').eq('is_active', true).order('created_at', {ascending: false}).limit(30),
+    sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', p.id).order('attendance_date', {ascending: false}).limit(14),
+    sb.from('weekly_defaults').select('weekday,outbound,return_trip').eq('user_id', p.id),
+    sb.rpc('get_seats', {p_route_id: sub.route_id, p_date: d})]);
   const cur = a.data ? `${a.data.outbound}${a.data.return_trip}` : null;
-  const off = sub.status !== 'active';
+  const expired = sub.end_date && sub.end_date < d, soon = sub.end_date && !expired && sub.end_date <= dayStr(5);
+  const off = sub.status !== 'active' || expired;
+  const s = st.data && st.data[0], cap = s ? s.capacity : 0;
+  const fullO = s && s.outbound_taken >= cap && !a.data?.outbound, fullR = s && s.return_taken >= cap && !a.data?.return_trip;
+  const dm = {}; (w.data || []).forEach(x => dm[x.weekday] = (x.outbound ? 't' : 'f') + (x.return_trip ? 't' : 'f'));
+  let seen = null; try { seen = localStorage.getItem('annSeen'); } catch (e) {}
+  const nn = (n.data || []).filter(x => seen && new Date(x.created_at) > new Date(seen)).length;
+  const red = t => `<p style="color:var(--dn)">${t}</p>`;
   $('#app').innerHTML = `<div class="card"><h2>هل ستداوم غداً؟</h2><p class="mu">${esc(p.full_name)} · ${d}</p>
-    ${off ? `<p style="color:var(--dn)">اشتراكك غير فعال. راجع صاحب الكوستر.</p>` : ''}
-    ${OPTS.map((o, i) => `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">${o[2]}<small>${o[3]}</small></button>`).join('')}
-    ${cur ? '' : '<p class="mu">لم تؤكد بعد. يمكنك تغيير اختيارك قبل إغلاق التسجيل.</p>'}</div>
-    <div class="card"><h2>التنبيهات</h2>${(n.data || []).map(x => `<p><b>${esc(x.title)}</b><br>${esc(x.message)}</p>`).join('') || '<p class="mu">لا توجد تنبيهات.</p>'}</div>
+    ${sub.status !== 'active' ? red('اشتراكك موقوف. راجع صاحب الكوستر.') : expired ? red('انتهى اشتراكك. جدّد مع صاحب الكوستر لتأكيد الدوام.') : soon ? red(`ينتهي اشتراكك في ${sub.end_date}. تواصل مع صاحب الكوستر للتجديد.`) : ''}
+    ${s ? `<p class="mu">المقاعد المتبقية: ذهاب ${Math.max(0, cap - s.outbound_taken)} · عودة ${Math.max(0, cap - s.return_taken)}</p>` : ''}
+    ${OPTS.map(o => { const full = (o[0] && fullO) || (o[1] && fullR);
+      return `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off || full ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">${o[2]}<small>${o[3]}${full ? ' · ممتلئ' : ''}</small></button>`; }).join('')}
+    ${a.data?.auto ? '<p class="mu">تم تأكيد هذا اليوم تلقائياً من جدولك الثابت. يمكنك تغييره.</p>' : cur ? '' : '<p class="mu">لم تؤكد بعد. يمكنك تغيير اختيارك قبل إغلاق التسجيل.</p>'}</div>
+    <div class="card"><h2>التنبيهات${nn ? `<span class="badge">${nn} جديد</span>` : ''}</h2><div class="ann" id="ann">${annHtml(n.data, false, seen)}</div></div>
+    <div class="card"><h2>جدولي الثابت</h2><p class="mu">يتأكد دوامك تلقائياً حسب هذا الجدول، وتقدر تغيّر أي يوم يدوياً. اختر "بدون" لإيقاف التأكيد التلقائي.</p>
+    ${DAYS.map((nm, i) => `<div class="row"><span>${nm}</span><select style="width:auto;margin:3px 0" onchange="setDef(${i},this.value)">${[['', 'بدون'], ['tt', 'أذهب وأرجع'], ['tf', 'أذهب فقط'], ['ft', 'أرجع فقط']].map(o => `<option value="${o[0]}" ${(dm[i] || '') === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>`).join('')}</div>
     <div class="card"><h2>سجل دوامك</h2>${histRows(h.data)}</div>`;
+  const ab = $('#ann'); if (ab) ab.scrollTop = ab.scrollHeight;
+  try { if (n.data && n.data.length) localStorage.setItem('annSeen', n.data[0].created_at); else if (!seen) localStorage.setItem('annSeen', new Date().toISOString()); } catch (e) {}
 }
 async function setAtt(route, d, o, r) {
   const {error} = await sb.rpc('set_my_attendance', {p_route_id: route, p_date: d, p_outbound: o, p_return: r});
@@ -153,20 +181,50 @@ async function adminView(p) {
     `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="adm"></div>`;
   adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : listPane();
 }
+const L = 'ar-IQ-u-nu-latn', TZ = 'Asia/Baghdad';
+const dKey = t => new Date(t).toLocaleDateString('en-CA', {timeZone: TZ});
+function dayLabel(t) {
+  const k = dKey(t);
+  if (k === dayStr(0)) return 'اليوم';
+  if (k === dayStr(-1)) return 'أمس';
+  return new Date(t).toLocaleDateString(L, {timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric'});
+}
+function annHtml(list, admin, since) {
+  if (!list || !list.length) return '<p class="mu">لا توجد تنبيهات.</p>';
+  let last = '';
+  return [...list].reverse().map(x => {
+    const k = dKey(x.created_at), sep = k !== last ? `<div class="day"><span>${esc(dayLabel(x.created_at))}</span></div>` : '';
+    last = k;
+    const to = admin ? `<small>إلى: ${x.target_group === 'boys' ? 'الشباب' : x.target_group === 'girls' ? 'البنات' : 'الجميع'}</small>` : '';
+    const tm = new Date(x.created_at).toLocaleTimeString(L, {timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true});
+    const nw = since && new Date(x.created_at) > new Date(since) ? '<small style="color:var(--dn)">● جديد</small>' : '';
+    const del = admin ? `<button class="sm dn" onclick="hideAnn('${x.id}')">إخفاء</button>` : '';
+    return `${sep}<div class="bub">${to}${nw}<b>${esc(x.title)}</b><br>${esc(x.message)}<time>${esc(tm)}</time>${del}</div>`;
+  }).join('');
+}
+async function loadSent() {
+  const {data} = await sb.from('announcements').select('id,title,message,created_at,target_group').eq('is_active', true).order('created_at', {ascending: false}).limit(30);
+  const el = $('#sent'); if (!el) return;
+  el.innerHTML = annHtml(data, true); el.scrollTop = el.scrollHeight;
+}
 const lbl = (o, r) => o && r ? 'ذهاب وعودة' : o ? 'ذهاب فقط' : r ? 'عودة فقط' : 'لا يداوم';
 const histRows = d => (d && d.length) ? `<table>${d.map(x => `<tr><td dir="ltr">${x.attendance_date}</td><td>${lbl(x.outbound, x.return_trip)}</td></tr>`).join('')}</table>` : '<p class="mu">لا يوجد سجل.</p>';
 let lastRows = [], subsData = [];
 async function listPane() {
-  const [at, sub] = await Promise.all([
+  await sb.rpc('apply_defaults', {p_date: adminDate});
+  const [at, sub, cs] = await Promise.all([
     sb.from('daily_attendance').select('user_id,outbound,return_trip,profiles(full_name,phone,group_type)').eq('attendance_date', adminDate),
-    sb.from('subscriptions').select('user_id,profiles(full_name,phone,group_type)').eq('status', 'active')]);
+    sb.from('subscriptions').select('user_id,profiles(full_name,phone,group_type)').eq('status', 'active'),
+    sb.from('system_settings').select('value').eq('key', 'seat_capacity').maybeSingle()]);
   if (at.error || sub.error) return fail(at.error || sub.error);
   const all = at.data || [], done = new Set(all.map(r => r.user_id));
   const rows = all.filter(r => r.profiles?.group_type === adminGroup && (r.outbound || r.return_trip));
   const pend = (sub.data || []).filter(s => s.profiles?.group_type === adminGroup && !done.has(s.user_id));
   lastRows = rows;
+  const cap = cs.data ? Number(cs.data.value) : 0, totO = all.filter(r => r.outbound).length, totR = all.filter(r => r.return_trip).length;
   $('#adm').innerHTML = `<div class="card"><label>التاريخ<input type="date" value="${adminDate}" onchange="adminDate=this.value;listPane()"></label>
     <div class="stats"><div><b>${rows.filter(r => r.outbound).length}</b>ذهاب</div><div><b>${rows.filter(r => r.return_trip).length}</b>عودة</div><div><b>${pend.length}</b>لم يؤكدوا</div></div>
+    <p class="mu">إجمالي الرحلة: ذهاب ${totO}${cap ? '/' + cap : ''} · عودة ${totR}${cap ? '/' + cap : ''}</p>
     <table><tr><th>الاسم</th><th>الهاتف</th><th>ذهاب</th><th>عودة</th></tr>${rows.map(r =>
     `<tr><td>${esc(r.profiles.full_name)}</td><td dir="ltr">${esc(r.profiles.phone)}</td><td>${r.outbound ? '✓' : ''}</td><td>${r.return_trip ? '✓' : ''}</td></tr>`).join('')
     || '<tr><td colspan="4" class="mu">لا توجد تأكيدات لهذا اليوم.</td></tr>'}</table>
@@ -182,19 +240,23 @@ function exportCsv() {
   a.download = `ركاب-${adminGroup === 'boys' ? 'شباب' : 'بنات'}-${adminDate}.csv`;
   a.click();
 }
+let subsSoon = false;
 async function subsPane() {
-  const {data, error} = await sb.from('subscriptions').select('id,status,user_id,profiles(full_name,phone,group_type)').order('created_at', {ascending: false});
+  const {data, error} = await sb.from('subscriptions').select('id,status,user_id,end_date,profiles(full_name,phone,group_type)').order('created_at', {ascending: false});
   if (error) return fail(error);
   subsData = data || [];
-  $('#adm').innerHTML = `<div class="card"><input id="q" placeholder="ابحث بالاسم أو الهاتف" oninput="drawSubs()"><div id="sl"></div></div><div id="hist"></div>`;
+  $('#adm').innerHTML = `<div class="card"><div class="row"><input id="q" style="flex:1" placeholder="ابحث بالاسم أو الهاتف" oninput="drawSubs()"><button class="sm" id="soonb" onclick="subsSoon=!subsSoon;drawSubs()"></button></div><div id="sl"></div></div><div id="hist"></div>`;
   drawSubs();
 }
 function drawSubs() {
-  const q = $('#q').value.trim();
-  const l = subsData.filter(s => `${s.profiles?.full_name} ${s.profiles?.phone}`.includes(q));
-  $('#sl').innerHTML = l.map(s => { const on = s.status === 'active'; return `<div class="card"><div class="row"><b>${esc(s.profiles?.full_name)}</b><span class="mu">${s.profiles?.group_type === 'boys' ? 'شباب' : 'بنات'} · ${on ? 'فعال' : 'موقوف'}</span></div>
+  const q = $('#q').value.trim(), t0 = dayStr(0), t5 = dayStr(5);
+  $('#soonb').textContent = subsSoon ? 'عرض الكل' : 'قريب الانتهاء';
+  const l = subsData.filter(s => `${s.profiles?.full_name} ${s.profiles?.phone}`.includes(q) && (!subsSoon || (s.end_date && s.end_date <= t5)));
+  $('#sl').innerHTML = l.map(s => { const on = s.status === 'active', ex = s.end_date && s.end_date < t0; return `<div class="card"><div class="row"><b>${esc(s.profiles?.full_name)}</b><span class="mu">${s.profiles?.group_type === 'boys' ? 'شباب' : 'بنات'} · ${on ? 'فعال' : 'موقوف'}</span></div>
     <div class="mu" dir="ltr" style="text-align:start">${esc(s.profiles?.phone)}</div>
+    <div class="mu" style="${ex ? 'color:var(--dn)' : ''}">${s.end_date ? (ex ? 'انتهى في ' : 'ينتهي في ') + s.end_date : 'بدون تاريخ انتهاء'}</div>
     <div class="row" style="margin-top:8px;justify-content:flex-start;flex-wrap:wrap"><button class="sm ${on ? 'dn' : ''}" onclick="setSub('${s.id}','${on ? 'suspended' : 'active'}')">${on ? 'إيقاف' : 'تفعيل'}</button>
+    <button class="sm" onclick="renew('${s.id}','${s.end_date || ''}')">تجديد 30 يوم</button><button class="sm" onclick="pickEnd('${s.id}')">تحديد تاريخ</button>
     <button class="sm" onclick="resetPw('${s.user_id}')">كلمة مرور جديدة</button><button class="sm" onclick="showHist('${s.user_id}')">السجل</button></div></div>`; }).join('') || '<p class="mu">لا يوجد مشتركون.</p>';
 }
 async function setSub(id, status) {
@@ -215,12 +277,16 @@ async function showHist(uid) {
   $('#hist').scrollIntoView();
 }
 function toolsPane() {
-  $('#adm').innerHTML = `<div class="card"><h2>إنشاء رموز اشتراك</h2>
+  $('#adm').innerHTML = `<div class="card"><h2>مقاعد الكوستر</h2><input id="cap" type="number" min="1" max="100"><button onclick="saveCap()">حفظ عدد المقاعد</button></div>
+    <div class="card"><h2>إنشاء رموز اشتراك</h2>
     <select id="g"><option value="boys">شباب</option><option value="girls">بنات</option></select>
     <input id="k" type="number" min="1" max="100" value="1"><button onclick="mkCodes()">إنشاء الرموز</button>
     <p class="mu">الرموز تظهر مرة واحدة فقط. انسخها وأعطِ كل طالب رمزه.</p><pre id="codes" hidden></pre></div>
-    <div class="card"><h2>إرسال تنبيه</h2><select id="t"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select>
-    <input id="ti" placeholder="العنوان"><textarea id="ms" rows="3" placeholder="نص التنبيه"></textarea><button onclick="sendAnn()">إرسال التنبيه</button></div>`;
+    <div class="card"><h2>إرسال تنبيه</h2>
+    <div class="row" style="flex-wrap:wrap;justify-content:flex-start;margin-bottom:8px">${TPL.map((t, i) => `<button class="sm" onclick="useTpl(${i})">${t[0]}</button>`).join('')}</div><select id="t"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select>
+    <input id="ti" placeholder="العنوان"><textarea id="ms" rows="3" placeholder="نص التنبيه"></textarea><button onclick="sendAnn()">إرسال التنبيه</button></div>
+    <div class="card"><h2>التنبيهات المرسلة</h2><div class="ann" id="sent"></div></div>`;
+  loadSent(); loadCap();
 }
 async function mkCodes() {
   const {data, error} = await sb.rpc('admin_create_codes', {p_group: $('#g').value, p_count: +$('#k').value || 1});
@@ -233,7 +299,48 @@ async function sendAnn() {
   const {data: {user}} = await sb.auth.getUser();
   const {error} = await sb.from('announcements').insert({title: ti, message: ms, target_group: $('#t').value || null, created_by: user.id});
   if (error) return fail(error);
-  msg('تم إرسال التنبيه'); $('#ti').value = $('#ms').value = '';
+  msg('تم إرسال التنبيه'); $('#ti').value = $('#ms').value = ''; loadSent();
+}
+const TPL = [['تأخير 15 دقيقة', 'تأخير الكوستر', 'سيتأخر الكوستر اليوم حوالي 15 دقيقة عن موعده.'],
+  ['لا توجد رحلة غداً', 'إلغاء رحلة', 'لا توجد رحلة غداً. سنبلغكم بأي تحديث.'],
+  ['تذكير بالتأكيد', 'تذكير', 'الرجاء تأكيد دوامك لرحلة الغد قبل الساعة 10 مساءً.']];
+function useTpl(i) { $('#ti').value = TPL[i][1]; $('#ms').value = TPL[i][2]; }
+async function hideAnn(id) {
+  if (!confirm('إخفاء هذا التنبيه عن الطلاب؟')) return;
+  const {error} = await sb.from('announcements').update({is_active: false}).eq('id', id);
+  if (error) return fail(error);
+  msg('تم إخفاء التنبيه'); loadSent();
+}
+async function loadCap() {
+  const {data} = await sb.from('system_settings').select('value').eq('key', 'seat_capacity').maybeSingle();
+  const el = $('#cap'); if (el && data) el.value = data.value;
+}
+async function saveCap() {
+  const n = parseInt($('#cap').value, 10);
+  if (!(n >= 1 && n <= 100)) return msg('اكتب عدداً بين 1 و100.', true);
+  const {error} = await sb.from('system_settings').upsert({key: 'seat_capacity', value: n, updated_at: new Date().toISOString()});
+  error ? fail(error) : msg('تم حفظ عدد المقاعد');
+}
+async function setDef(day, v) {
+  const q = v ? sb.from('weekly_defaults').upsert({user_id: ME.id, weekday: day, outbound: v[0] === 't', return_trip: v[1] === 't'})
+              : sb.from('weekly_defaults').delete().eq('user_id', ME.id).eq('weekday', day);
+  const {error} = await q;
+  error ? fail(error) : msg('تم حفظ الجدول');
+}
+async function setEnd(id, v) {
+  const {error} = await sb.from('subscriptions').update({end_date: v}).eq('id', id);
+  if (error) return fail(error);
+  msg('تم تحديث تاريخ الانتهاء'); subsPane();
+}
+function renew(id, cur) {
+  const base = cur && cur > dayStr(0) ? cur : dayStr(0);
+  const d = new Date(base + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 30);
+  setEnd(id, d.toISOString().slice(0, 10));
+}
+function pickEnd(id) {
+  const v = prompt('تاريخ انتهاء الاشتراك (YYYY-MM-DD):');
+  if (!v) return;
+  /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) ? setEnd(id, v.trim()) : msg('صيغة التاريخ غير صحيحة.', true);
 }
 boot();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
