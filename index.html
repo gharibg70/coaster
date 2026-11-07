@@ -2,58 +2,128 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#0f6b45">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>كوستر الجامعة</title>
+<!-- مكتبة الأيقونات -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- خط Cairo العصري -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f1ea;--card:#fffdf8;--tx:#1c211e;--mu:#667069;--pr:#0f6b45;--on:#fff;--bd:#d9d6ca;--dn:#b3261e;--ac:#e8b931}
-@media(prefers-color-scheme:dark){:root{--bg:#101412;--card:#181e1b;--tx:#edf0ec;--mu:#98a39c;--pr:#46c98a;--on:#0b1a12;--bd:#2a322d;--dn:#ff8a80;--ac:#e8b931}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif}
-header{background:var(--pr);color:var(--on);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:5px solid var(--ac)}
-header b{font-size:19px}
-main{max-width:720px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
-h2{margin:0 0 10px;font-size:18px}
-.mu{color:var(--mu);font-size:14px}
-input,select,textarea{width:100%;padding:11px;margin:5px 0 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
-button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:11px 16px;background:var(--pr);color:var(--on);font-weight:600}
-button.ghost{background:transparent;color:inherit;border:1px solid currentColor;padding:6px 12px;font-weight:400}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
-button:disabled{opacity:.5}
-.opt{display:block;width:100%;text-align:start;background:var(--bg);color:var(--tx);border:2px solid var(--bd);margin-bottom:8px;padding:14px}
-.opt small{display:block;font-weight:400;color:var(--mu)}
-.opt.sel{border-color:var(--pr);background:var(--pr);color:var(--on)}
-.opt.sel small{color:var(--on)}
-#msg{position:fixed;bottom:16px;inset-inline:16px;max-width:520px;margin:auto;padding:12px 16px;border-radius:8px;z-index:9;color:#fff}
-#msg.ok{background:#0f6b45}#msg.err{background:var(--dn);color:#fff}
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
-.tabs button.on{background:var(--pr);color:var(--on)}
-.stats{display:flex;gap:8px;margin-bottom:10px}
-.stats div{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center}
-.stats b{display:block;font-size:24px}
-table{width:100%;border-collapse:collapse}
-td,th{padding:7px 4px;border-bottom:1px solid var(--bd);text-align:start;font-size:15px}
-pre{background:var(--bg);padding:10px;border-radius:8px;direction:ltr;text-align:left;user-select:all;white-space:pre-wrap;font-size:17px}
-.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
-button.sm{padding:6px 12px;font-size:14px}
-button.dn{background:var(--dn);color:#fff}
-.ann{max-height:340px;overflow:auto;padding:2px}
-.day{text-align:center;margin:12px 0 6px}
-.day span{background:var(--bd);color:var(--mu);font-size:13px;padding:2px 12px;border-radius:12px}
-.bub{background:var(--bg);border:1px solid var(--bd);border-inline-start:4px solid var(--pr);border-radius:10px;padding:8px 12px;margin:6px 0;max-width:92%}
-.bub small{display:block;color:var(--mu);font-size:12px}
-.bub time{display:block;text-align:end;color:var(--mu);font-size:12px}
-.badge{background:var(--dn);color:#fff;border-radius:10px;padding:0 8px;font-size:13px;margin-inline-start:6px}
+:root {
+  --bg: #f8fafc; --card: #ffffff; --tx: #0f172a; --mu: #64748b;
+  --pr: #059669; --pr-hover: #047857; --on: #ffffff; --bd: #e2e8f0;
+  --dn: #ef4444; --ac: #f59e0b;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+@media(prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a; --card: #1e293b; --tx: #f1f5f9; --mu: #94a3b8;
+    --pr: #10b981; --pr-hover: #34d399; --on: #022c22; --bd: #334155;
+    --dn: #f87171; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--bg); color: var(--tx); font-family: 'Cairo', sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* الهيدر */
+header { background: linear-gradient(135deg, var(--pr), var(--pr-hover)); color: var(--on); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 10; }
+header b { font-size: 20px; font-weight: 800; }
+header button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-family: 'Cairo'; font-size: 14px; cursor: pointer; }
+
+main { max-width: 720px; margin: 0 auto; padding: 20px; padding-bottom: 90px; } /* مساحة للشريط السفلي */
+
+/* البطاقات */
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); transition: transform 0.2s; }
+h2 { margin: 0 0 14px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.mu { color: var(--mu); font-size: 14px; }
+
+/* المدخلات */
+input, select, textarea { width: 100%; padding: 12px 14px; margin: 6px 0 14px; border: 1.5px solid var(--bd); border-radius: 12px; background: var(--bg); color: var(--tx); font-family: 'Cairo', sans-serif; font-size: 15px; transition: border-color 0.2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--pr); outline: none; }
+label { font-weight: 600; font-size: 14px; }
+
+/* الأزرار */
+button { font-family: 'Cairo', sans-serif; cursor: pointer; border: none; border-radius: 12px; padding: 12px 20px; background: var(--pr); color: var(--on); font-weight: 700; font-size: 15px; transition: all 0.2s; }
+button:active { transform: scale(0.97); }
+button.ghost { background: transparent; color: var(--tx); border: 1.5px solid var(--bd); }
+button.sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+button.dn { background: var(--dn); color: #fff; }
+
+/* أزرار الخيارات */
+.opt { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: start; background: var(--card); color: var(--tx); border: 2px solid var(--bd); margin-bottom: 10px; padding: 14px 18px; border-radius: 14px; transition: all 0.2s; }
+.opt:hover { border-color: var(--pr); }
+.opt small { display: block; font-weight: 400; color: var(--mu); font-size: 13px; margin-top: 4px; }
+.opt.sel { border-color: var(--pr); background: var(--pr); color: var(--on); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+.opt.sel small { color: rgba(255,255,255,0.8); }
+.opt i { font-size: 20px; }
+
+/* شريط المقاعد */
+.progress-container { background: var(--bd); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.progress-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease, background-color 0.4s; }
+
+/* التنبيهات والشات */
+.bub { background: var(--bg); border: 1px solid var(--bd); border-inline-start: 4px solid var(--pr); border-radius: 12px; padding: 12px 16px; margin: 8px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.bub small { display: block; color: var(--mu); font-size: 12px; margin-bottom: 4px; }
+.bub time { display: block; text-align: end; color: var(--mu); font-size: 11px; margin-top: 6px; }
+
+/* الحالات الفارغة */
+.empty-state { text-align: center; padding: 30px 10px; color: var(--mu); }
+.empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
+
+/* التنبيهات (Toast) */
+#msg { position: fixed; bottom: 80px; inset-inline: 20px; max-width: 520px; margin: auto; padding: 14px 20px; border-radius: 12px; z-index: 99; color: #fff; font-weight: 700; box-shadow: var(--shadow-hover); animation: slideUp 0.3s ease-out; }
+#msg.ok { background: var(--pr); }
+#msg.err { background: var(--dn); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* شاشة التحميل */
+@keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+.spinner { width: 44px; height: 44px; border: 4px solid var(--bd); border-top-color: var(--pr); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* الشريط السفلي (للطالب) */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0 15px; border-top: 1px solid var(--bd); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 100; }
+.bottom-nav a { text-decoration: none; color: var(--mu); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; transition: color 0.2s; cursor: pointer; }
+.bottom-nav a i { font-size: 20px; }
+.bottom-nav a.active { color: var(--pr); }
+
+/* إخفاء التبويبات غير النشطة */
+.tab-content { display: none; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* الأدمن */
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+.tabs button { flex: 1; background: var(--card); color: var(--mu); border: 1px solid var(--bd); white-space: nowrap; }
+.tabs button.on { background: var(--pr); color: var(--on); border-color: var(--pr); }
+.stats { display: flex; gap: 10px; margin-bottom: 16px; }
+.stats div { flex: 1; background: var(--bg); border: 1px solid var(--bd); border-radius: 12px; padding: 10px; text-align: center; }
+.stats b { display: block; font-size: 22px; color: var(--pr); }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 10px 6px; border-bottom: 1px solid var(--bd); text-align: start; font-size: 14px; }
 </style>
 </head>
 <body>
-<header><b>كوستر الجامعة</b><button class="ghost" id="out" hidden onclick="logout()">خروج</button></header>
-<main id="app"><p class="mu">جاري التحميل...</p></main>
+<header>
+  <b><i class="fa-solid fa-bus"></i> كوستر الجامعة</b>
+  <button id="out" hidden onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</button>
+</header>
+
+<!-- شاشة التحميل -->
+<main id="app">
+  <div id="splash" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 24px;">
+    <img src="icon-192.png" alt="كوستر" style="width: 120px; height: 120px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); animation: pulse 1.5s infinite alternate;">
+    <div class="spinner"></div>
+    <p class="mu" style="font-weight: 700;">جاري التحميل...</p>
+  </div>
+</main>
+
 <div id="msg" hidden></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -76,7 +146,7 @@ const ERR = {
 };
 function msg(t, bad) {
   const m = $('#msg'); m.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
-  clearTimeout(msg.t); msg.t = setTimeout(() => m.hidden = true, 4500);
+  clearTimeout(msg.t); msg.t = setTimeout(() => m.hidden = true, 4000);
 }
 const fail = e => msg(e.message || String(e), true);
 
@@ -94,13 +164,13 @@ async function logout() { await sb.auth.signOut(); $('#out').hidden = true; auth
 
 /* ---------- تسجيل الدخول ---------- */
 function authView(reg) {
-  $('#app').innerHTML = `<div class="card"><h2>${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
-  ${reg ? `<label>الاسم الكامل<input id="n" autocomplete="name"></label>` : ''}
-  <label>رقم الهاتف<input id="p" type="tel" inputmode="tel" autocomplete="tel"></label>
-  <label>كلمة المرور<input id="w" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}"></label>
-  ${reg ? `<label>رمز الاشتراك<input id="c" autocapitalize="characters" style="direction:ltr"></label><p class="mu">يعطيك صاحب الكوستر رمزاً خاصاً بك. يُستخدم مرة واحدة.</p>` : ''}
-  <button onclick="${reg ? 'signUp()' : 'signIn()'}">${reg ? 'إنشاء الحساب' : 'دخول'}</button>
-  <p><button class="ghost" onclick="authView(${!reg})">${reg ? 'عندي حساب' : 'ليس لدي حساب'}</button></p></div>`;
+  $('#app').innerHTML = `<div class="card" style="margin-top:40px;"><h2><i class="fa-solid fa-user-lock"></i> ${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
+  ${reg ? `<label>الاسم الكامل</label><input id="n" autocomplete="name" placeholder="مثال: أحمد محمد">` : ''}
+  <label>رقم الهاتف</label><input id="p" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXXX">
+  <label>كلمة المرور</label><input id="w" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" placeholder="••••••">
+  ${reg ? `<label>رمز الاشتراك</label><input id="c" autocapitalize="characters" style="direction:ltr" placeholder="BUS-XXXX"><p class="mu" style="margin-top:-10px;">يعطيك صاحب الكوستر رمزاً خاصاً بك.</p>` : ''}
+  <button onclick="${reg ? 'signUp()' : 'signIn()'}" style="width:100%; margin-top:10px;">${reg ? '<i class="fa-solid fa-user-plus"></i> إنشاء الحساب' : '<i class="fa-solid fa-right-to-bracket"></i> دخول'}</button>
+  <p style="text-align:center; margin-top:15px;"><button class="ghost sm" onclick="authView(${!reg})">${reg ? 'عندي حساب' : 'ليس لدي حساب'}</button></p></div>`;
 }
 async function signIn() {
   const p = $('#p').value, w = $('#w').value;
@@ -120,55 +190,161 @@ async function signUp() {
   route(data.user);
 }
 
-/* ---------- الطالب ---------- */
-const OPTS = [[true, true, 'أذهب وأرجع', 'دهوك إلى الموصل ثم العودة'], [true, false, 'أذهب فقط', 'دهوك إلى الموصل'],
-              [false, true, 'أرجع فقط', 'الموصل إلى دهوك'], [false, false, 'لا أداوم', 'لا حجز لأي رحلة']];
+/* ---------- واجهة الطالب ---------- */
+const OPTS = [
+  [true, true, 'أذهب وأرجع', 'دهوك إلى الموصل ثم العودة', 'fa-arrows-left-right'],
+  [true, false, 'أذهب فقط', 'دهوك إلى الموصل', 'fa-arrow-right'],
+  [false, true, 'أرجع فقط', 'الموصل إلى دهوك', 'fa-arrow-left'],
+  [false, false, 'لا أداوم', 'لا حجز لأي رحلة', 'fa-bed']
+];
 let ME = null;
+let currentTab = 'home'; // لتذكر التبويب المفتوح
 const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav a').forEach(el => el.classList.remove('active'));
+  $(`#tab-${tab}`).classList.add('active');
+  $(`#nav-${tab}`).classList.add('active');
+}
+
 async function studentView(p) {
   ME = p;
   const {data: sub} = await sb.from('subscriptions').select('route_id,status,end_date').eq('user_id', p.id).maybeSingle();
+  
   if (!sub) {
-    $('#app').innerHTML = `<div class="card"><h2>أهلاً ${esc(p.full_name)}</h2><p>لم يُفعّل اشتراكك بعد. أدخل رمز الاشتراك:</p>
-    <input id="c" autocapitalize="characters" style="direction:ltr"><button onclick="redeem()">تفعيل الاشتراك</button></div>`;
+    $('#app').innerHTML = `<div class="card"><h2><i class="fa-solid fa-key"></i> تفعيل الحساب</h2><p>لم يُفعّل اشتراكك بعد. أدخل رمز الاشتراك:</p>
+    <input id="c" autocapitalize="characters" style="direction:ltr" placeholder="BUS-XXXX"><button onclick="redeem()" style="width:100%">تفعيل الاشتراك</button></div>`;
     return;
   }
+
   const d = dayStr(1);
   await sb.rpc('apply_defaults', {p_date: d});
+  
   const [a, n, h, w, st] = await Promise.all([
     sb.from('daily_attendance').select('outbound,return_trip,auto').eq('user_id', p.id).eq('attendance_date', d).maybeSingle(),
     sb.from('announcements').select('title,message,created_at').eq('is_active', true).order('created_at', {ascending: false}).limit(30),
     sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', p.id).order('attendance_date', {ascending: false}).limit(14),
     sb.from('weekly_defaults').select('weekday,outbound,return_trip').eq('user_id', p.id),
-    sb.rpc('get_seats', {p_route_id: sub.route_id, p_date: d})]);
+    sb.rpc('get_seats', {p_route_id: sub.route_id, p_date: d})
+  ]);
+
   const cur = a.data ? `${a.data.outbound}${a.data.return_trip}` : null;
   const expired = sub.end_date && sub.end_date < d, soon = sub.end_date && !expired && sub.end_date <= dayStr(5);
   const off = sub.status !== 'active' || expired;
   const s = st.data && st.data[0], cap = s ? s.capacity : 0;
   const fullO = s && s.outbound_taken >= cap && !a.data?.outbound, fullR = s && s.return_taken >= cap && !a.data?.return_trip;
   const dm = {}; (w.data || []).forEach(x => dm[x.weekday] = (x.outbound ? 't' : 'f') + (x.return_trip ? 't' : 'f'));
+  
   let seen = null; try { seen = localStorage.getItem('annSeen'); } catch (e) {}
   const nn = (n.data || []).filter(x => seen && new Date(x.created_at) > new Date(seen)).length;
-  const red = t => `<p style="color:var(--dn)">${t}</p>`;
-  $('#app').innerHTML = `<div class="card"><h2>هل ستداوم غداً؟</h2><p class="mu">${esc(p.full_name)} · ${d}</p>
-    ${sub.status !== 'active' ? red('اشتراكك موقوف. راجع صاحب الكوستر.') : expired ? red('انتهى اشتراكك. جدّد مع صاحب الكوستر لتأكيد الدوام.') : soon ? red(`ينتهي اشتراكك في ${sub.end_date}. تواصل مع صاحب الكوستر للتجديد.`) : ''}
-    ${s ? `<p class="mu">المقاعد المتبقية: ذهاب ${Math.max(0, cap - s.outbound_taken)} · عودة ${Math.max(0, cap - s.return_taken)}</p>` : ''}
-    ${OPTS.map(o => { const full = (o[0] && fullO) || (o[1] && fullR);
-      return `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off || full ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">${o[2]}<small>${o[3]}${full ? ' · ممتلئ' : ''}</small></button>`; }).join('')}
-    ${a.data?.auto ? '<p class="mu">تم تأكيد هذا اليوم تلقائياً من جدولك الثابت. يمكنك تغييره.</p>' : cur ? '' : '<p class="mu">لم تؤكد بعد. يمكنك تغيير اختيارك قبل إغلاق التسجيل.</p>'}</div>
-    <div class="card"><h2>التنبيهات${nn ? `<span class="badge">${nn} جديد</span>` : ''}</h2><div class="ann" id="ann">${annHtml(n.data, false, seen)}</div></div>
-    <div class="card"><h2>إشعارات الهاتف</h2><div id="pushbox"></div></div>
-    <div class="card"><h2>جدولي الثابت</h2><p class="mu">يتأكد دوامك تلقائياً حسب هذا الجدول، وتقدر تغيّر أي يوم يدوياً. اختر "بدون" لإيقاف التأكيد التلقائي.</p>
-    ${DAYS.map((nm, i) => `<div class="row"><span>${nm}</span><select style="width:auto;margin:3px 0" onchange="setDef(${i},this.value)">${[['', 'بدون'], ['tt', 'أذهب وأرجع'], ['tf', 'أذهب فقط'], ['ft', 'أرجع فقط']].map(o => `<option value="${o[0]}" ${(dm[i] || '') === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>`).join('')}</div>
-    <div class="card"><h2>سجل دوامك</h2>${histRows(h.data)}</div>`;
-  const ab = $('#ann'); if (ab) ab.scrollTop = ab.scrollHeight;
+  const red = t => `<p style="color:var(--dn); font-size:14px; font-weight:600; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> ${t}</p>`;
+
+  // حساب المقاعد والنسبة المئوية
+  const remO = cap - (s ? s.outbound_taken : 0);
+  const remR = cap - (s ? s.return_taken : 0);
+  const pctO = cap ? (remO / cap) * 100 : 0;
+  const pctR = cap ? (remR / cap) * 100 : 0;
+  
+  // لون شريط التقدم (أخضر، أصفر، أحمر)
+  const barColor = pct => pct > 40 ? 'var(--pr)' : pct > 10 ? 'var(--ac)' : 'var(--dn)';
+
+  $('#app').innerHTML = `
+  <!-- التبويب الأول: الرئيسية -->
+  <div id="tab-home" class="tab-content ${currentTab === 'home' ? 'active' : ''}">
+    <div class="card">
+      <h2><i class="fa-regular fa-calendar-check"></i> دوام الغد</h2>
+      <p class="mu" style="margin-top:-10px;">${esc(p.full_name)} · ${d}</p>
+      ${sub.status !== 'active' ? red('اشتراكك موقوف. راجع صاحب الكوستر.') : expired ? red('انتهى اشتراكك. جدّد لتأكيد الدوام.') : soon ? red(`ينتهي اشتراكك في ${sub.end_date}.`) : ''}
+      
+      ${s ? `
+      <!-- أشرطة المقاعد المتبقية -->
+      <div style="margin-bottom: 20px; background: var(--bg); padding: 15px; border-radius: 12px;">
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
+          <span><i class="fa-solid fa-bus"></i> ذهاب</span>
+          <span style="color:${barColor(pctO)}">${Math.max(0, remO)} مقعد</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" style="width:${pctO}%; background:${barColor(pctO)}"></div></div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-top:12px; margin-bottom:6px;">
+          <span><i class="fa-solid fa-bus-simple"></i> عودة</span>
+          <span style="color:${barColor(pctR)}">${Math.max(0, remR)} مقعد</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" style="width:${pctR}%; background:${barColor(pctR)}"></div></div>
+      </div>` : ''}
+
+      ${OPTS.map(o => { const full = (o[0] && fullO) || (o[1] && fullR);
+        return `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off || full ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">
+          <div>
+            <b>${o[2]}</b>
+            <small>${o[3]}${full ? ' · ممتلئ' : ''}</small>
+          </div>
+          <i class="fa-solid ${o[4]}"></i>
+        </button>`; }).join('')}
+      ${a.data?.auto ? '<p class="mu" style="text-align:center;"><i class="fa-solid fa-robot"></i> تم التأكيد تلقائياً من جدولك الثابت.</p>' : ''}
+    </div>
+
+    <div class="card">
+      <h2><i class="fa-solid fa-calendar-days"></i> جدولي الثابت</h2>
+      <p class="mu" style="margin-top:-10px;">يتأكد دوامك تلقائياً حسب هذا الجدول.</p>
+      ${DAYS.map((nm, i) => `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--bd); padding:8px 0;">
+        <span style="font-weight:600;">${nm}</span>
+        <select style="width:auto; margin:0; padding:6px 12px; border-radius:8px;" onchange="setDef(${i},this.value)">
+          ${[['', 'بدون'], ['tt', 'أذهب وأرجع'], ['tf', 'أذهب فقط'], ['ft', 'أرجع فقط']].map(o => `<option value="${o[0]}" ${(dm[i] || '') === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}
+        </select>
+      </div>`).join('')}
+    </div>
+  </div>
+
+  <!-- التبويب الثاني: التنبيهات -->
+  <div id="tab-ann" class="tab-content ${currentTab === 'ann' ? 'active' : ''}">
+    <div class="card">
+      <h2><i class="fa-solid fa-bullhorn"></i> التنبيهات ${nn ? `<span class="badge" style="background:var(--dn);color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;">${nn} جديد</span>` : ''}</h2>
+      <div id="ann-list">${annHtml(n.data, false, seen)}</div>
+    </div>
+    <div class="card">
+      <h2><i class="fa-solid fa-mobile-screen"></i> إشعارات الهاتف</h2>
+      <div id="pushbox"></div>
+    </div>
+  </div>
+
+  <!-- التبويب الثالث: السجل -->
+  <div id="tab-hist" class="tab-content ${currentTab === 'hist' ? 'active' : ''}">
+    <div class="card">
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> سجل دوامك</h2>
+      ${histRows(h.data)}
+    </div>
+  </div>
+
+  <!-- التبويب الرابع: حسابي -->
+  <div id="tab-profile" class="tab-content ${currentTab === 'profile' ? 'active' : ''}">
+    <div class="card">
+      <h2><i class="fa-solid fa-user"></i> حسابي</h2>
+      <p><b>الاسم:</b> ${esc(p.full_name)}</p>
+      <p><b>الهاتف:</b> <span dir="ltr">${esc(p.phone)}</span></p>
+      <p><b>حالة الاشتراك:</b> ${sub.status === 'active' && !expired ? '<span style="color:var(--pr)">فعال</span>' : '<span style="color:var(--dn)">غير فعال</span>'}</p>
+      <p><b>تاريخ الانتهاء:</b> ${sub.end_date || 'غير محدد'}</p>
+    </div>
+  </div>
+
+  <!-- شريط التنقل السفلي -->
+  <nav class="bottom-nav">
+    <a id="nav-home" class="${currentTab === 'home' ? 'active' : ''}" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> الرئيسية</a>
+    <a id="nav-ann" class="${currentTab === 'ann' ? 'active' : ''}" onclick="switchTab('ann')"><i class="fa-solid fa-bell"></i> التنبيهات</a>
+    <a id="nav-hist" class="${currentTab === 'hist' ? 'active' : ''}" onclick="switchTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> السجل</a>
+    <a id="nav-profile" class="${currentTab === 'profile' ? 'active' : ''}" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i> حسابي</a>
+  </nav>`;
+
   pushBox();
   try { if (n.data && n.data.length) localStorage.setItem('annSeen', n.data[0].created_at); else if (!seen) localStorage.setItem('annSeen', new Date().toISOString()); } catch (e) {}
 }
+
 async function setAtt(route, d, o, r) {
+  if (navigator.vibrate) navigator.vibrate(50); // اهتزاز الهاتف
   const {error} = await sb.rpc('set_my_attendance', {p_route_id: route, p_date: d, p_outbound: o, p_return: r});
   if (error) return fail(error);
-  msg('تم حفظ اختيارك'); boot();
+  msg('تم حفظ اختيارك بنجاح'); boot();
 }
 async function redeem() {
   const {error} = await sb.rpc('redeem_subscription_code', {p_code: $('#c').value.trim()});
@@ -176,10 +352,10 @@ async function redeem() {
   msg('تم تفعيل الاشتراك'); boot();
 }
 
-/* ---------- صاحب الكوستر ---------- */
+/* ---------- صاحب الكوستر (الأدمن) ---------- */
 let adminDate = dayStr(1), adminGroup = 'boys';
 async function adminView(p) {
-  $('#app').innerHTML = `<div class="tabs">${[['boys', 'الشباب'], ['girls', 'البنات'], ['subs', 'المشتركون'], ['tools', 'الرموز والتنبيهات']].map(t =>
+  $('#app').innerHTML = `<div class="tabs">${[['boys', '<i class="fa-solid fa-person"></i> الشباب'], ['girls', '<i class="fa-solid fa-person-dress"></i> البنات'], ['subs', '<i class="fa-solid fa-users"></i> المشتركون'], ['tools', '<i class="fa-solid fa-gear"></i> الرموز والتنبيهات']].map(t =>
     `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="adm"></div>`;
   adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : listPane();
 }
@@ -192,25 +368,28 @@ function dayLabel(t) {
   return new Date(t).toLocaleDateString(L, {timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric'});
 }
 function annHtml(list, admin, since) {
-  if (!list || !list.length) return '<p class="mu">لا توجد تنبيهات.</p>';
+  if (!list || !list.length) return '<div class="empty-state"><i class="fa-solid fa-bell-slash"></i><p>لا توجد تنبيهات حالياً.</p></div>';
   let last = '';
   return [...list].reverse().map(x => {
-    const k = dKey(x.created_at), sep = k !== last ? `<div class="day"><span>${esc(dayLabel(x.created_at))}</span></div>` : '';
+    const k = dKey(x.created_at), sep = k !== last ? `<div style="text-align:center; margin:12px 0 6px;"><span style="background:var(--bd);color:var(--mu);font-size:12px;padding:2px 12px;border-radius:12px;">${esc(dayLabel(x.created_at))}</span></div>` : '';
     last = k;
     const to = admin ? `<small>إلى: ${x.target_group === 'boys' ? 'الشباب' : x.target_group === 'girls' ? 'البنات' : 'الجميع'}</small>` : '';
     const tm = new Date(x.created_at).toLocaleTimeString(L, {timeZone: TZ, hour: 'numeric', minute: '2-digit', hour12: true});
     const nw = since && new Date(x.created_at) > new Date(since) ? '<small style="color:var(--dn)">● جديد</small>' : '';
-    const del = admin ? `<button class="sm dn" onclick="hideAnn('${x.id}')">إخفاء</button>` : '';
-    return `${sep}<div class="bub">${to}${nw}<b>${esc(x.title)}</b><br>${esc(x.message)}<time>${esc(tm)}</time>${del}</div>`;
+    const del = admin ? `<button class="sm dn" style="margin-top:8px; padding:4px 8px; font-size:11px;" onclick="hideAnn('${x.id}')">إخفاء</button>` : '';
+    return `${sep}<div class="bub">${to}${nw}<b>${esc(x.title)}</b><br><span style="font-size:14px;">${esc(x.message)}</span><time>${esc(tm)}</time>${del}</div>`;
   }).join('');
 }
 async function loadSent() {
   const {data} = await sb.from('announcements').select('id,title,message,created_at,target_group').eq('is_active', true).order('created_at', {ascending: false}).limit(30);
   const el = $('#sent'); if (!el) return;
-  el.innerHTML = annHtml(data, true); el.scrollTop = el.scrollHeight;
+  el.innerHTML = annHtml(data, true);
 }
 const lbl = (o, r) => o && r ? 'ذهاب وعودة' : o ? 'ذهاب فقط' : r ? 'عودة فقط' : 'لا يداوم';
-const histRows = d => (d && d.length) ? `<table>${d.map(x => `<tr><td dir="ltr">${x.attendance_date}</td><td>${lbl(x.outbound, x.return_trip)}</td></tr>`).join('')}</table>` : '<p class="mu">لا يوجد سجل.</p>';
+function histRows(d) {
+  if (!d || !d.length) return '<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p>لم تقم بتأكيد أي رحلة سابقة.</p></div>';
+  return `<table>${d.map(x => `<tr><td dir="ltr" style="font-weight:600;">${x.attendance_date}</td><td>${lbl(x.outbound, x.return_trip)}</td></tr>`).join('')}</table>`;
+}
 let lastRows = [], subsData = [];
 async function listPane() {
   await sb.rpc('apply_defaults', {p_date: adminDate});
@@ -224,14 +403,14 @@ async function listPane() {
   const pend = (sub.data || []).filter(s => s.profiles?.group_type === adminGroup && !done.has(s.user_id));
   lastRows = rows;
   const cap = cs.data ? Number(cs.data.value) : 0, totO = all.filter(r => r.outbound).length, totR = all.filter(r => r.return_trip).length;
-  $('#adm').innerHTML = `<div class="card"><label>التاريخ<input type="date" value="${adminDate}" onchange="adminDate=this.value;listPane()"></label>
-    <div class="stats"><div><b>${rows.filter(r => r.outbound).length}</b>ذهاب</div><div><b>${rows.filter(r => r.return_trip).length}</b>عودة</div><div><b>${pend.length}</b>لم يؤكدوا</div></div>
+  $('#adm').innerHTML = `<div class="card"><label>التاريخ</label><input type="date" value="${adminDate}" onchange="adminDate=this.value;listPane()">
+    <div class="stats"><div><b>${rows.filter(r => r.outbound).length}</b>ذهاب</div><div><b>${rows.filter(r => r.return_trip).length}</b>عودة</div><div><b>${pend.length}</b>متبقي</div></div>
     <p class="mu">إجمالي الرحلة: ذهاب ${totO}${cap ? '/' + cap : ''} · عودة ${totR}${cap ? '/' + cap : ''}</p>
     <table><tr><th>الاسم</th><th>الهاتف</th><th>ذهاب</th><th>عودة</th></tr>${rows.map(r =>
-    `<tr><td>${esc(r.profiles.full_name)}</td><td dir="ltr">${esc(r.profiles.phone)}</td><td>${r.outbound ? '✓' : ''}</td><td>${r.return_trip ? '✓' : ''}</td></tr>`).join('')
-    || '<tr><td colspan="4" class="mu">لا توجد تأكيدات لهذا اليوم.</td></tr>'}</table>
-    <p><button class="sm" onclick="exportCsv()">تصدير إلى Excel</button></p></div>
-    <div class="card"><h2>لم يؤكدوا بعد</h2>${pend.map(s => `<div class="row"><span>${esc(s.profiles.full_name)}</span><span class="mu" dir="ltr">${esc(s.profiles.phone)}</span></div>`).join('') || '<p class="mu">الجميع أكدوا.</p>'}</div>`;
+    `<tr><td>${esc(r.profiles.full_name)}</td><td dir="ltr">${esc(r.profiles.phone)}</td><td>${r.outbound ? '<i class="fa-solid fa-check" style="color:var(--pr)"></i>' : ''}</td><td>${r.return_trip ? '<i class="fa-solid fa-check" style="color:var(--pr)"></i>' : ''}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="empty-state">لا توجد تأكيدات لهذا اليوم.</td></tr>'}</table>
+    <p style="margin-top:15px;"><button class="sm" onclick="exportCsv()"><i class="fa-solid fa-file-excel"></i> تصدير إلى Excel</button></p></div>
+    <div class="card"><h2><i class="fa-solid fa-user-clock"></i> لم يؤكدوا بعد</h2>${pend.map(s => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--bd);"><span>${esc(s.profiles.full_name)}</span><span class="mu" dir="ltr">${esc(s.profiles.phone)}</span></div>`).join('') || '<p class="mu">الجميع أكدوا.</p>'}</div>`;
 }
 function exportCsv() {
   const q = v => { v = String(v ?? ''); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
@@ -247,19 +426,19 @@ async function subsPane() {
   const {data, error} = await sb.from('subscriptions').select('id,status,user_id,end_date,profiles(full_name,phone,group_type)').order('created_at', {ascending: false});
   if (error) return fail(error);
   subsData = data || [];
-  $('#adm').innerHTML = `<div class="card"><div class="row"><input id="q" style="flex:1" placeholder="ابحث بالاسم أو الهاتف" oninput="drawSubs()"><button class="sm" id="soonb" onclick="subsSoon=!subsSoon;drawSubs()"></button></div><div id="sl"></div></div><div id="hist"></div>`;
+  $('#adm').innerHTML = `<div class="card"><div style="display:flex; gap:8px;"><input id="q" style="flex:1; margin:0;" placeholder="ابحث بالاسم أو الهاتف" oninput="drawSubs()"><button class="sm" id="soonb" onclick="subsSoon=!subsSoon;drawSubs()"></button></div><div id="sl" style="margin-top:15px;"></div></div><div id="hist"></div>`;
   drawSubs();
 }
 function drawSubs() {
   const q = $('#q').value.trim(), t0 = dayStr(0), t5 = dayStr(5);
   $('#soonb').textContent = subsSoon ? 'عرض الكل' : 'قريب الانتهاء';
   const l = subsData.filter(s => `${s.profiles?.full_name} ${s.profiles?.phone}`.includes(q) && (!subsSoon || (s.end_date && s.end_date <= t5)));
-  $('#sl').innerHTML = l.map(s => { const on = s.status === 'active', ex = s.end_date && s.end_date < t0; return `<div class="card"><div class="row"><b>${esc(s.profiles?.full_name)}</b><span class="mu">${s.profiles?.group_type === 'boys' ? 'شباب' : 'بنات'} · ${on ? 'فعال' : 'موقوف'}</span></div>
-    <div class="mu" dir="ltr" style="text-align:start">${esc(s.profiles?.phone)}</div>
-    <div class="mu" style="${ex ? 'color:var(--dn)' : ''}">${s.end_date ? (ex ? 'انتهى في ' : 'ينتهي في ') + s.end_date : 'بدون تاريخ انتهاء'}</div>
-    <div class="row" style="margin-top:8px;justify-content:flex-start;flex-wrap:wrap"><button class="sm ${on ? 'dn' : ''}" onclick="setSub('${s.id}','${on ? 'suspended' : 'active'}')">${on ? 'إيقاف' : 'تفعيل'}</button>
+  $('#sl').innerHTML = l.map(s => { const on = s.status === 'active', ex = s.end_date && s.end_date < t0; return `<div class="card" style="box-shadow:none; border:1px solid var(--bd); margin-bottom:10px;"><div style="display:flex; justify-content:space-between; align-items:center;"><b>${esc(s.profiles?.full_name)}</b><span class="mu" style="font-size:12px;">${s.profiles?.group_type === 'boys' ? 'شباب' : 'بنات'} · ${on ? '<span style="color:var(--pr)">فعال</span>' : '<span style="color:var(--dn)">موقوف</span>'}</span></div>
+    <div class="mu" dir="ltr" style="text-align:start; margin-top:4px;">${esc(s.profiles?.phone)}</div>
+    <div class="mu" style="margin-top:4px; ${ex ? 'color:var(--dn)' : ''}">${s.end_date ? (ex ? 'انتهى في ' : 'ينتهي في ') + s.end_date : 'بدون تاريخ انتهاء'}</div>
+    <div style="display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;"><button class="sm ${on ? 'dn' : ''}" onclick="setSub('${s.id}','${on ? 'suspended' : 'active'}')">${on ? 'إيقاف' : 'تفعيل'}</button>
     <button class="sm" onclick="renew('${s.id}','${s.end_date || ''}')">تجديد 30 يوم</button><button class="sm" onclick="pickEnd('${s.id}')">تحديد تاريخ</button>
-    <button class="sm" onclick="resetPw('${s.user_id}')">كلمة مرور جديدة</button><button class="sm" onclick="showHist('${s.user_id}')">السجل</button></div></div>`; }).join('') || '<p class="mu">لا يوجد مشتركون.</p>';
+    <button class="sm" onclick="resetPw('${s.user_id}')">كلمة مرور</button><button class="sm" onclick="showHist('${s.user_id}')">السجل</button></div></div>`; }).join('') || '<div class="empty-state"><i class="fa-solid fa-users-slash"></i><p>لا يوجد مشتركون يطابقون بحثك.</p></div>';
 }
 async function setSub(id, status) {
   const {error} = await sb.from('subscriptions').update({status}).eq('id', id);
@@ -276,18 +455,19 @@ async function showHist(uid) {
   const {data, error} = await sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', uid).order('attendance_date', {ascending: false}).limit(30);
   if (error) return fail(error);
   $('#hist').innerHTML = `<div class="card"><h2>آخر 30 يوماً</h2>${histRows(data)}</div>`;
-  $('#hist').scrollIntoView();
+  $('#hist').scrollIntoView({behavior: 'smooth'});
 }
 function toolsPane() {
-  $('#adm').innerHTML = `<div class="card"><h2>مقاعد الكوستر</h2><input id="cap" type="number" min="1" max="100"><button onclick="saveCap()">حفظ عدد المقاعد</button></div>
-    <div class="card"><h2>إنشاء رموز اشتراك</h2>
+  $('#adm').innerHTML = `<div class="card"><h2><i class="fa-solid fa-chair"></i> مقاعد الكوستر</h2><input id="cap" type="number" min="1" max="100"><button onclick="saveCap()" style="width:100%">حفظ عدد المقاعد</button></div>
+    <div class="card"><h2><i class="fa-solid fa-ticket"></i> إنشاء رموز اشتراك</h2>
     <select id="g"><option value="boys">شباب</option><option value="girls">بنات</option></select>
-    <input id="k" type="number" min="1" max="100" value="1"><button onclick="mkCodes()">إنشاء الرموز</button>
-    <p class="mu">الرموز تظهر مرة واحدة فقط. انسخها وأعطِ كل طالب رمزه.</p><pre id="codes" hidden></pre></div>
-    <div class="card"><h2>إرسال تنبيه</h2>
-    <div class="row" style="flex-wrap:wrap;justify-content:flex-start;margin-bottom:8px">${TPL.map((t, i) => `<button class="sm" onclick="useTpl(${i})">${t[0]}</button>`).join('')}</div><select id="t"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select>
-    <input id="ti" placeholder="العنوان"><textarea id="ms" rows="3" placeholder="نص التنبيه"></textarea><button onclick="sendAnn()">إرسال التنبيه</button></div>
-    <div class="card"><h2>التنبيهات المرسلة</h2><div class="ann" id="sent"></div></div>`;
+    <input id="k" type="number" min="1" max="100" value="1"><button onclick="mkCodes()" style="width:100%">إنشاء الرموز</button>
+    <p class="mu">الرموز تظهر مرة واحدة فقط. انسخها وأعطِ كل طالب رمزه.</p><pre id="codes" hidden style="background:var(--bg); padding:10px; border-radius:8px; direction:ltr; text-align:left; user-select:all;"></pre></div>
+    <div class="card"><h2><i class="fa-solid fa-bullhorn"></i> إرسال تنبيه</h2>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${TPL.map((t, i) => `<button class="sm" onclick="useTpl(${i})">${t[0]}</button>`).join('')}</div>
+    <select id="t"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select>
+    <input id="ti" placeholder="العنوان"><textarea id="ms" rows="3" placeholder="نص التنبيه"></textarea><button onclick="sendAnn()" style="width:100%"><i class="fa-solid fa-paper-plane"></i> إرسال التنبيه</button></div>
+    <div class="card"><h2><i class="fa-solid fa-list"></i> التنبيهات المرسلة</h2><div id="sent"></div></div>`;
   loadSent(); loadCap();
 }
 async function mkCodes() {
@@ -304,7 +484,7 @@ async function sendAnn() {
   $('#ti').value = $('#ms').value = ''; loadSent();
   msg('تم نشر التنبيه. جاري إرسال إشعارات الهاتف...');
   const r = await sb.functions.invoke('send-push', {body: {announcement_id: row.id}});
-  r.error ? msg('نُشر التنبيه داخل التطبيق، لكن فشل إرسال إشعارات الهاتف.', true) : msg(`تم الإرسال. وصل الإشعار إلى ${r.data.sent} جهاز.`);
+  r.error ? msg('نُشر التنبيه، لكن فشل إرسال إشعارات الهاتف.', true) : msg(`تم الإرسال إلى ${r.data.sent} جهاز.`);
 }
 const TPL = [['تأخير 15 دقيقة', 'تأخير الكوستر', 'سيتأخر الكوستر اليوم حوالي 15 دقيقة عن موعده.'],
   ['لا توجد رحلة غداً', 'إلغاء رحلة', 'لا توجد رحلة غداً. سنبلغكم بأي تحديث.'],
@@ -359,8 +539,8 @@ async function pushBox() {
   if (Notification.permission === 'denied') { el.innerHTML = '<p class="mu">الإشعارات محظورة. فعّلها من إعدادات المتصفح لهذا الموقع.</p>'; return; }
   const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
   el.innerHTML = sub && Notification.permission === 'granted'
-    ? '<p class="mu">الإشعارات مفعّلة على هذا الجهاز ✓</p><button class="sm" onclick="disablePush()">إيقاف</button>'
-    : '<p class="mu">فعّل الإشعارات حتى تصلك تنبيهات الكوستر وهذا التطبيق مغلق.</p><button onclick="enablePush()">تفعيل الإشعارات</button>';
+    ? '<p style="color:var(--pr);font-weight:600;margin-top:-10px;"><i class="fa-solid fa-circle-check"></i> الإشعارات مفعّلة على هذا الجهاز</p><button class="sm ghost" onclick="disablePush()">إيقاف</button>'
+    : '<p class="mu" style="margin-top:-10px;">فعّل الإشعارات حتى تصلك تنبيهات الكوستر وهذا التطبيق مغلق.</p><button onclick="enablePush()" style="width:100%"><i class="fa-solid fa-bell"></i> تفعيل الإشعارات</button>';
 }
 async function enablePush() {
   try {
@@ -379,6 +559,7 @@ async function disablePush() {
     msg('تم إيقاف الإشعارات'); pushBox();
   } catch (e) { fail(e); }
 }
+
 boot();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
