@@ -157,10 +157,12 @@ async function studentView(p) {
       return `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off || full ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">${o[2]}<small>${o[3]}${full ? ' · ممتلئ' : ''}</small></button>`; }).join('')}
     ${a.data?.auto ? '<p class="mu">تم تأكيد هذا اليوم تلقائياً من جدولك الثابت. يمكنك تغييره.</p>' : cur ? '' : '<p class="mu">لم تؤكد بعد. يمكنك تغيير اختيارك قبل إغلاق التسجيل.</p>'}</div>
     <div class="card"><h2>التنبيهات${nn ? `<span class="badge">${nn} جديد</span>` : ''}</h2><div class="ann" id="ann">${annHtml(n.data, false, seen)}</div></div>
+    <div class="card"><h2>إشعارات الهاتف</h2><div id="pushbox"></div></div>
     <div class="card"><h2>جدولي الثابت</h2><p class="mu">يتأكد دوامك تلقائياً حسب هذا الجدول، وتقدر تغيّر أي يوم يدوياً. اختر "بدون" لإيقاف التأكيد التلقائي.</p>
     ${DAYS.map((nm, i) => `<div class="row"><span>${nm}</span><select style="width:auto;margin:3px 0" onchange="setDef(${i},this.value)">${[['', 'بدون'], ['tt', 'أذهب وأرجع'], ['tf', 'أذهب فقط'], ['ft', 'أرجع فقط']].map(o => `<option value="${o[0]}" ${(dm[i] || '') === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>`).join('')}</div>
     <div class="card"><h2>سجل دوامك</h2>${histRows(h.data)}</div>`;
   const ab = $('#ann'); if (ab) ab.scrollTop = ab.scrollHeight;
+  pushBox();
   try { if (n.data && n.data.length) localStorage.setItem('annSeen', n.data[0].created_at); else if (!seen) localStorage.setItem('annSeen', new Date().toISOString()); } catch (e) {}
 }
 async function setAtt(route, d, o, r) {
@@ -297,9 +299,12 @@ async function sendAnn() {
   const ti = $('#ti').value.trim(), ms = $('#ms').value.trim();
   if (!ti || !ms) return msg('اكتب العنوان والنص.', true);
   const {data: {user}} = await sb.auth.getUser();
-  const {error} = await sb.from('announcements').insert({title: ti, message: ms, target_group: $('#t').value || null, created_by: user.id});
+  const {data: row, error} = await sb.from('announcements').insert({title: ti, message: ms, target_group: $('#t').value || null, created_by: user.id}).select('id').single();
   if (error) return fail(error);
-  msg('تم إرسال التنبيه'); $('#ti').value = $('#ms').value = ''; loadSent();
+  $('#ti').value = $('#ms').value = ''; loadSent();
+  msg('تم نشر التنبيه. جاري إرسال إشعارات الهاتف...');
+  const r = await sb.functions.invoke('send-push', {body: {announcement_id: row.id}});
+  r.error ? msg('نُشر التنبيه داخل التطبيق، لكن فشل إرسال إشعارات الهاتف.', true) : msg(`تم الإرسال. وصل الإشعار إلى ${r.data.sent} جهاز.`);
 }
 const TPL = [['تأخير 15 دقيقة', 'تأخير الكوستر', 'سيتأخر الكوستر اليوم حوالي 15 دقيقة عن موعده.'],
   ['لا توجد رحلة غداً', 'إلغاء رحلة', 'لا توجد رحلة غداً. سنبلغكم بأي تحديث.'],
@@ -341,6 +346,38 @@ function pickEnd(id) {
   const v = prompt('تاريخ انتهاء الاشتراك (YYYY-MM-DD):');
   if (!v) return;
   /^\d{4}-\d{2}-\d{2}$/.test(v.trim()) ? setEnd(id, v.trim()) : msg('صيغة التاريخ غير صحيحة.', true);
+}
+const VAPID_PUBLIC_KEY = 'BFtCcBjsSsNv7fGWMimDNQ8EM8KzhVGCb3LmxLER7doM5d1RVNqtDJvN0RKWkqnoCtWr5XpTiRtPpzQJ_2Ykdes';
+const b64 = t => Uint8Array.from(atob((t + '='.repeat((4 - t.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+async function pushBox() {
+  const el = $('#pushbox'); if (!el) return;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), app = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    el.innerHTML = ios && !app ? '<p class="mu">على الأيفون: افتح الموقع بسفاري، اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"، وافتح التطبيق من الشاشة الرئيسية لتفعيل الإشعارات.</p>' : '<p class="mu">متصفحك لا يدعم الإشعارات.</p>';
+    return;
+  }
+  if (Notification.permission === 'denied') { el.innerHTML = '<p class="mu">الإشعارات محظورة. فعّلها من إعدادات المتصفح لهذا الموقع.</p>'; return; }
+  const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+  el.innerHTML = sub && Notification.permission === 'granted'
+    ? '<p class="mu">الإشعارات مفعّلة على هذا الجهاز ✓</p><button class="sm" onclick="disablePush()">إيقاف</button>'
+    : '<p class="mu">فعّل الإشعارات حتى تصلك تنبيهات الكوستر وهذا التطبيق مغلق.</p><button onclick="enablePush()">تفعيل الإشعارات</button>';
+}
+async function enablePush() {
+  try {
+    if (await Notification.requestPermission() !== 'granted') return msg('لم يُسمح بالإشعارات. فعّلها من إعدادات المتصفح.', true);
+    const reg = await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64(VAPID_PUBLIC_KEY)});
+    const {error} = await sb.from('push_subscriptions').upsert({user_id: ME.id, endpoint: sub.endpoint, subscription_data: sub.toJSON()}, {onConflict: 'endpoint'});
+    if (error) throw error;
+    msg('تم تفعيل الإشعارات'); pushBox();
+  } catch (e) { fail(e); }
+}
+async function disablePush() {
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (sub) { await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); }
+    msg('تم إيقاف الإشعارات'); pushBox();
+  } catch (e) { fail(e); }
 }
 boot();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
