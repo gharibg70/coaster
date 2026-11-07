@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f6b45">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>كوستر الجامعة</title>
+<style>
+:root{--bg:#f3f1ea;--card:#fffdf8;--tx:#1c211e;--mu:#667069;--pr:#0f6b45;--on:#fff;--bd:#d9d6ca;--dn:#b3261e;--ac:#e8b931}
+@media(prefers-color-scheme:dark){:root{--bg:#101412;--card:#181e1b;--tx:#edf0ec;--mu:#98a39c;--pr:#46c98a;--on:#0b1a12;--bd:#2a322d;--dn:#ff8a80;--ac:#e8b931}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "Segoe UI",Tahoma,"Noto Naskh Arabic",sans-serif}
+header{background:var(--pr);color:var(--on);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:5px solid var(--ac)}
+header b{font-size:19px}
+main{max-width:720px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 10px;font-size:18px}
+.mu{color:var(--mu);font-size:14px}
+input,select,textarea{width:100%;padding:11px;margin:5px 0 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:11px 16px;background:var(--pr);color:var(--on);font-weight:600}
+button.ghost{background:transparent;color:inherit;border:1px solid currentColor;padding:6px 12px;font-weight:400}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+button:disabled{opacity:.5}
+.opt{display:block;width:100%;text-align:start;background:var(--bg);color:var(--tx);border:2px solid var(--bd);margin-bottom:8px;padding:14px}
+.opt small{display:block;font-weight:400;color:var(--mu)}
+.opt.sel{border-color:var(--pr);background:var(--pr);color:var(--on)}
+.opt.sel small{color:var(--on)}
+#msg{position:fixed;bottom:16px;inset-inline:16px;max-width:520px;margin:auto;padding:12px 16px;border-radius:8px;z-index:9;color:#fff}
+#msg.ok{background:#0f6b45}#msg.err{background:var(--dn);color:#fff}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.tabs button.on{background:var(--pr);color:var(--on)}
+.stats{display:flex;gap:8px;margin-bottom:10px}
+.stats div{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px;text-align:center}
+.stats b{display:block;font-size:24px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:7px 4px;border-bottom:1px solid var(--bd);text-align:start;font-size:15px}
+pre{background:var(--bg);padding:10px;border-radius:8px;direction:ltr;text-align:left;user-select:all;white-space:pre-wrap;font-size:17px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+button.sm{padding:6px 12px;font-size:14px}
+button.dn{background:var(--dn);color:#fff}
+</style>
+</head>
+<body>
+<header><b>كوستر الجامعة</b><button class="ghost" id="out" hidden onclick="logout()">خروج</button></header>
+<main id="app"><p class="mu">جاري التحميل...</p></main>
+<div id="msg" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayStr = n => new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA', {timeZone: 'Asia/Baghdad'});
+const toMail = p => p.includes('@') ? p.trim() : p.replace(/\D/g, '') + '@bus.app';
+const ERR = {
+  'invalid code': 'الرمز غير صحيح أو مستخدم من قبل.',
+  'registration closed': 'انتهى وقت التسجيل لهذا اليوم.',
+  'no active subscription': 'اشتراكك غير فعال. راجع صاحب الكوستر.',
+  'invalid date': 'التاريخ غير مسموح.',
+  'Invalid login credentials': 'رقم الهاتف أو كلمة المرور غير صحيحة.',
+  'User already registered': 'هذا الرقم مسجل مسبقاً. سجل الدخول.',
+  'password too short': 'كلمة المرور قصيرة (6 أحرف على الأقل).',
+  'admin only': 'هذه العملية للأدمن فقط.'
+};
+function msg(t, bad) {
+  const m = $('#msg'); m.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
+  clearTimeout(msg.t); msg.t = setTimeout(() => m.hidden = true, 4500);
+}
+const fail = e => msg(e.message || String(e), true);
+
+async function boot() {
+  const {data: {session}} = await sb.auth.getSession();
+  session ? route(session.user) : authView();
+}
+async function route(user) {
+  $('#out').hidden = false;
+  const {data: p, error} = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+  if (error || !p) return fail(error || new Error('لم يتم العثور على الملف الشخصي'));
+  p.role === 'admin' ? adminView(p) : studentView(p);
+}
+async function logout() { await sb.auth.signOut(); $('#out').hidden = true; authView(); }
+
+/* ---------- تسجيل الدخول ---------- */
+function authView(reg) {
+  $('#app').innerHTML = `<div class="card"><h2>${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
+  ${reg ? `<label>الاسم الكامل<input id="n" autocomplete="name"></label>` : ''}
+  <label>رقم الهاتف<input id="p" type="tel" inputmode="tel" autocomplete="tel"></label>
+  <label>كلمة المرور<input id="w" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}"></label>
+  ${reg ? `<label>رمز الاشتراك<input id="c" autocapitalize="characters" style="direction:ltr"></label><p class="mu">يعطيك صاحب الكوستر رمزاً خاصاً بك. يُستخدم مرة واحدة.</p>` : ''}
+  <button onclick="${reg ? 'signUp()' : 'signIn()'}">${reg ? 'إنشاء الحساب' : 'دخول'}</button>
+  <p><button class="ghost" onclick="authView(${!reg})">${reg ? 'عندي حساب' : 'ليس لدي حساب'}</button></p></div>`;
+}
+async function signIn() {
+  const p = $('#p').value, w = $('#w').value;
+  if (!p || !w) return msg('أدخل رقم الهاتف وكلمة المرور.', true);
+  const {data, error} = await sb.auth.signInWithPassword({email: toMail(p), password: w});
+  error ? fail(error) : route(data.user);
+}
+async function signUp() {
+  const n = $('#n').value.trim(), p = $('#p').value, w = $('#w').value, c = $('#c').value.trim();
+  if (!n || p.replace(/\D/g, '').length < 7 || w.length < 6 || !c) return msg('أكمل كل الحقول. كلمة المرور 6 أحرف على الأقل.', true);
+  const {data, error} = await sb.auth.signUp({email: toMail(p), password: w, options: {data: {full_name: n, phone: p}}});
+  if (error) return fail(error);
+  if (!data.session) return msg('فعّل Auto Confirm: عطّل Confirm email في Supabase.', true);
+  const r = await sb.rpc('redeem_subscription_code', {p_code: c});
+  if (r.error) { msg(r.error.message, true); return route(data.user); }
+  msg('تم إنشاء الحساب وتفعيل الاشتراك');
+  route(data.user);
+}
+
+/* ---------- الطالب ---------- */
+const OPTS = [[true, true, 'أذهب وأرجع', 'دهوك إلى الموصل ثم العودة'], [true, false, 'أذهب فقط', 'دهوك إلى الموصل'],
+              [false, true, 'أرجع فقط', 'الموصل إلى دهوك'], [false, false, 'لا أداوم', 'لا حجز لأي رحلة']];
+async function studentView(p) {
+  const {data: sub} = await sb.from('subscriptions').select('route_id,status').eq('user_id', p.id).maybeSingle();
+  if (!sub) {
+    $('#app').innerHTML = `<div class="card"><h2>أهلاً ${esc(p.full_name)}</h2><p>لم يُفعّل اشتراكك بعد. أدخل رمز الاشتراك:</p>
+    <input id="c" autocapitalize="characters" style="direction:ltr"><button onclick="redeem()">تفعيل الاشتراك</button></div>`;
+    return;
+  }
+  const d = dayStr(1);
+  const [a, n, h] = await Promise.all([
+    sb.from('daily_attendance').select('outbound,return_trip').eq('user_id', p.id).eq('attendance_date', d).maybeSingle(),
+    sb.from('announcements').select('title,message,created_at').eq('is_active', true).order('created_at', {ascending: false}).limit(5),
+    sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', p.id).order('attendance_date', {ascending: false}).limit(14)]);
+  const cur = a.data ? `${a.data.outbound}${a.data.return_trip}` : null;
+  const off = sub.status !== 'active';
+  $('#app').innerHTML = `<div class="card"><h2>هل ستداوم غداً؟</h2><p class="mu">${esc(p.full_name)} · ${d}</p>
+    ${off ? `<p style="color:var(--dn)">اشتراكك غير فعال. راجع صاحب الكوستر.</p>` : ''}
+    ${OPTS.map((o, i) => `<button class="opt ${cur === `${o[0]}${o[1]}` ? 'sel' : ''}" ${off ? 'disabled' : ''} onclick="setAtt('${sub.route_id}','${d}',${o[0]},${o[1]})">${o[2]}<small>${o[3]}</small></button>`).join('')}
+    ${cur ? '' : '<p class="mu">لم تؤكد بعد. يمكنك تغيير اختيارك قبل إغلاق التسجيل.</p>'}</div>
+    <div class="card"><h2>التنبيهات</h2>${(n.data || []).map(x => `<p><b>${esc(x.title)}</b><br>${esc(x.message)}</p>`).join('') || '<p class="mu">لا توجد تنبيهات.</p>'}</div>
+    <div class="card"><h2>سجل دوامك</h2>${histRows(h.data)}</div>`;
+}
+async function setAtt(route, d, o, r) {
+  const {error} = await sb.rpc('set_my_attendance', {p_route_id: route, p_date: d, p_outbound: o, p_return: r});
+  if (error) return fail(error);
+  msg('تم حفظ اختيارك'); boot();
+}
+async function redeem() {
+  const {error} = await sb.rpc('redeem_subscription_code', {p_code: $('#c').value.trim()});
+  if (error) return fail(error);
+  msg('تم تفعيل الاشتراك'); boot();
+}
+
+/* ---------- صاحب الكوستر ---------- */
+let adminDate = dayStr(1), adminGroup = 'boys';
+async function adminView(p) {
+  $('#app').innerHTML = `<div class="tabs">${[['boys', 'الشباب'], ['girls', 'البنات'], ['subs', 'المشتركون'], ['tools', 'الرموز والتنبيهات']].map(t =>
+    `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="adm"></div>`;
+  adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : listPane();
+}
+const lbl = (o, r) => o && r ? 'ذهاب وعودة' : o ? 'ذهاب فقط' : r ? 'عودة فقط' : 'لا يداوم';
+const histRows = d => (d && d.length) ? `<table>${d.map(x => `<tr><td dir="ltr">${x.attendance_date}</td><td>${lbl(x.outbound, x.return_trip)}</td></tr>`).join('')}</table>` : '<p class="mu">لا يوجد سجل.</p>';
+let lastRows = [], subsData = [];
+async function listPane() {
+  const [at, sub] = await Promise.all([
+    sb.from('daily_attendance').select('user_id,outbound,return_trip,profiles(full_name,phone,group_type)').eq('attendance_date', adminDate),
+    sb.from('subscriptions').select('user_id,profiles(full_name,phone,group_type)').eq('status', 'active')]);
+  if (at.error || sub.error) return fail(at.error || sub.error);
+  const all = at.data || [], done = new Set(all.map(r => r.user_id));
+  const rows = all.filter(r => r.profiles?.group_type === adminGroup && (r.outbound || r.return_trip));
+  const pend = (sub.data || []).filter(s => s.profiles?.group_type === adminGroup && !done.has(s.user_id));
+  lastRows = rows;
+  $('#adm').innerHTML = `<div class="card"><label>التاريخ<input type="date" value="${adminDate}" onchange="adminDate=this.value;listPane()"></label>
+    <div class="stats"><div><b>${rows.filter(r => r.outbound).length}</b>ذهاب</div><div><b>${rows.filter(r => r.return_trip).length}</b>عودة</div><div><b>${pend.length}</b>لم يؤكدوا</div></div>
+    <table><tr><th>الاسم</th><th>الهاتف</th><th>ذهاب</th><th>عودة</th></tr>${rows.map(r =>
+    `<tr><td>${esc(r.profiles.full_name)}</td><td dir="ltr">${esc(r.profiles.phone)}</td><td>${r.outbound ? '✓' : ''}</td><td>${r.return_trip ? '✓' : ''}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="mu">لا توجد تأكيدات لهذا اليوم.</td></tr>'}</table>
+    <p><button class="sm" onclick="exportCsv()">تصدير إلى Excel</button></p></div>
+    <div class="card"><h2>لم يؤكدوا بعد</h2>${pend.map(s => `<div class="row"><span>${esc(s.profiles.full_name)}</span><span class="mu" dir="ltr">${esc(s.profiles.phone)}</span></div>`).join('') || '<p class="mu">الجميع أكدوا.</p>'}</div>`;
+}
+function exportCsv() {
+  const q = v => { v = String(v ?? ''); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+  const lines = [['الاسم', 'الهاتف', 'ذهاب', 'عودة'].map(q).join(',')].concat(lastRows.map(r =>
+    [r.profiles.full_name, r.profiles.phone, r.outbound ? 'نعم' : '', r.return_trip ? 'نعم' : ''].map(q).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], {type: 'text/csv;charset=utf-8'}));
+  a.download = `ركاب-${adminGroup === 'boys' ? 'شباب' : 'بنات'}-${adminDate}.csv`;
+  a.click();
+}
+async function subsPane() {
+  const {data, error} = await sb.from('subscriptions').select('id,status,user_id,profiles(full_name,phone,group_type)').order('created_at', {ascending: false});
+  if (error) return fail(error);
+  subsData = data || [];
+  $('#adm').innerHTML = `<div class="card"><input id="q" placeholder="ابحث بالاسم أو الهاتف" oninput="drawSubs()"><div id="sl"></div></div><div id="hist"></div>`;
+  drawSubs();
+}
+function drawSubs() {
+  const q = $('#q').value.trim();
+  const l = subsData.filter(s => `${s.profiles?.full_name} ${s.profiles?.phone}`.includes(q));
+  $('#sl').innerHTML = l.map(s => { const on = s.status === 'active'; return `<div class="card"><div class="row"><b>${esc(s.profiles?.full_name)}</b><span class="mu">${s.profiles?.group_type === 'boys' ? 'شباب' : 'بنات'} · ${on ? 'فعال' : 'موقوف'}</span></div>
+    <div class="mu" dir="ltr" style="text-align:start">${esc(s.profiles?.phone)}</div>
+    <div class="row" style="margin-top:8px;justify-content:flex-start;flex-wrap:wrap"><button class="sm ${on ? 'dn' : ''}" onclick="setSub('${s.id}','${on ? 'suspended' : 'active'}')">${on ? 'إيقاف' : 'تفعيل'}</button>
+    <button class="sm" onclick="resetPw('${s.user_id}')">كلمة مرور جديدة</button><button class="sm" onclick="showHist('${s.user_id}')">السجل</button></div></div>`; }).join('') || '<p class="mu">لا يوجد مشتركون.</p>';
+}
+async function setSub(id, status) {
+  const {error} = await sb.from('subscriptions').update({status}).eq('id', id);
+  if (error) return fail(error);
+  msg('تم التحديث'); subsPane();
+}
+async function resetPw(uid) {
+  const w = prompt('كلمة المرور الجديدة (6 أحرف على الأقل):');
+  if (!w) return;
+  const {error} = await sb.rpc('admin_reset_password', {p_user_id: uid, p_new_password: w});
+  error ? fail(error) : msg('تم تغيير كلمة المرور. أبلغ الطالب بها.');
+}
+async function showHist(uid) {
+  const {data, error} = await sb.from('daily_attendance').select('attendance_date,outbound,return_trip').eq('user_id', uid).order('attendance_date', {ascending: false}).limit(30);
+  if (error) return fail(error);
+  $('#hist').innerHTML = `<div class="card"><h2>آخر 30 يوماً</h2>${histRows(data)}</div>`;
+  $('#hist').scrollIntoView();
+}
+function toolsPane() {
+  $('#adm').innerHTML = `<div class="card"><h2>إنشاء رموز اشتراك</h2>
+    <select id="g"><option value="boys">شباب</option><option value="girls">بنات</option></select>
+    <input id="k" type="number" min="1" max="100" value="1"><button onclick="mkCodes()">إنشاء الرموز</button>
+    <p class="mu">الرموز تظهر مرة واحدة فقط. انسخها وأعطِ كل طالب رمزه.</p><pre id="codes" hidden></pre></div>
+    <div class="card"><h2>إرسال تنبيه</h2><select id="t"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select>
+    <input id="ti" placeholder="العنوان"><textarea id="ms" rows="3" placeholder="نص التنبيه"></textarea><button onclick="sendAnn()">إرسال التنبيه</button></div>`;
+}
+async function mkCodes() {
+  const {data, error} = await sb.rpc('admin_create_codes', {p_group: $('#g').value, p_count: +$('#k').value || 1});
+  if (error) return fail(error);
+  const el = $('#codes'); el.hidden = false; el.textContent = data.map(x => x.new_code).join('\n');
+}
+async function sendAnn() {
+  const ti = $('#ti').value.trim(), ms = $('#ms').value.trim();
+  if (!ti || !ms) return msg('اكتب العنوان والنص.', true);
+  const {data: {user}} = await sb.auth.getUser();
+  const {error} = await sb.from('announcements').insert({title: ti, message: ms, target_group: $('#t').value || null, created_by: user.id});
+  if (error) return fail(error);
+  msg('تم إرسال التنبيه'); $('#ti').value = $('#ms').value = '';
+}
+boot();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
