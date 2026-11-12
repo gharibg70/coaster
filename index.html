@@ -661,31 +661,43 @@ function showLoc(d, first) {
 }
 async function pushLoc(v) {
   const {error} = await sb.from('bus_location').update({...v, updated_at: new Date().toISOString()}).eq('id', 1);
-  if (error) fail(error);
+  if (error && Date.now() - (pushLoc.t || 0) > 60000) { pushLoc.t = Date.now(); fail(error); }
+}
+let geoPos = null, geoHb = null, geoTick = 0;
+function sendPos() { if (geoPos) { geoTick = Date.now(); pushLoc({...geoPos, is_sharing: true}); } }
+function watchGeo() {
+  if (geoId != null) navigator.geolocation.clearWatch(geoId);
+  geoId = navigator.geolocation.watchPosition(pos => {
+    const c = pos.coords; geoPos = {lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, heading: c.heading, speed: c.speed};
+    if (Date.now() - geoTick >= 4000) sendPos();
+  }, e => { if (e.code === 1) { stopShare(true); msg('لم يُسمح بالوصول للموقع. فعّله من إعدادات المتصفح.', true); } },
+  {enableHighAccuracy: true, maximumAge: 0, timeout: 30000});
+}
+async function lockScreen() {
+  try { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { if (geoId != null && document.visibilityState === 'visible') lockScreen(); }); } catch (e) {}
 }
 async function startShare() {
   if (!navigator.geolocation) return msg('جهازك لا يدعم تحديد الموقع.', true);
-  geoId = navigator.geolocation.watchPosition(pos => {
-    const t = Date.now(); if (t - geoLast < 5000) return; geoLast = t;
-    const c = pos.coords;
-    pushLoc({lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, heading: c.heading, speed: c.speed, is_sharing: true});
-  }, e => { stopShare(true); msg(e.code === 1 ? 'لم يُسمح بالوصول للموقع. فعّله من إعدادات المتصفح.' : 'تعذّر تحديد الموقع.', true); }, {enableHighAccuracy: true, maximumAge: 5000, timeout: 20000});
-  try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+  watchGeo(); lockScreen();
+  clearInterval(geoHb); geoHb = setInterval(() => { if (geoPos && Date.now() - geoTick > 8000) sendPos(); }, 10000);
   msg('بدأت مشاركة موقعك مع الطلاب'); shareUi();
 }
 async function stopShare(silent) {
   if (geoId != null) navigator.geolocation.clearWatch(geoId);
-  geoId = null; try { wake && wake.release(); } catch (e) {} wake = null;
+  clearInterval(geoHb); geoId = null; geoPos = null;
+  try { wake && wake.release(); } catch (e) {} wake = null;
   await pushLoc({is_sharing: false});
   if (!silent) msg('تم إيقاف مشاركة الموقع');
   shareUi();
 }
-document.addEventListener('visibilitychange', async () => {
-  if (geoId != null && document.visibilityState === 'visible') try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (geoId != null) { const gap = Date.now() - geoTick; watchGeo(); lockScreen(); if (gap > 30000) msg('انقطع إرسال موقعك أثناء خروجك من التطبيق. أبقِه مفتوحاً.', true); }
+  else if (mapObj && $('#map')) sb.from('bus_location').select('*').eq('id', 1).maybeSingle().then(r => r.data && showLoc(r.data));
 });
 function shareUi() {
   const el = $('#shbox'); if (!el) return; const on = geoId != null;
-  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><b><i class="fa-solid fa-location-dot"></i> موقع الكوستر</b><div class="mu">${on ? 'يشاهدك الطلاب الآن · أبقِ الشاشة مفتوحة' : 'غير مشارك مع الطلاب'}</div></div><button class="${on ? 'dn' : ''}" onclick="${on ? 'stopShare()' : 'startShare()'}">${on ? 'إيقاف' : 'بدء المشاركة'}</button></div>`;
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><b><i class="fa-solid fa-location-dot"></i> موقع الكوستر</b><div class="mu">${on ? 'يشاهدك الطلاب الآن · أبقِ التطبيق مفتوحاً والشاشة مضاءة' : 'غير مشارك مع الطلاب'}</div></div><button class="${on ? 'dn' : ''}" onclick="${on ? 'stopShare()' : 'startShare()'}">${on ? 'إيقاف' : 'بدء المشاركة'}</button></div>`;
 }
 
 boot();
