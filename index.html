@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f6b45">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -105,6 +105,53 @@ button.dn { background: var(--dn); color: #fff; }
 .stats b { display: block; font-size: 22px; color: var(--pr); }
 table { width: 100%; border-collapse: collapse; }
 td, th { padding: 10px 6px; border-bottom: 1px solid var(--bd); text-align: start; font-size: 14px; }
+/* ===== تحسينات الواجهة ===== */
+:root{--r:18px;--ring:0 0 0 4px color-mix(in srgb,var(--pr) 18%,transparent);--soft:color-mix(in srgb,var(--pr) 12%,transparent)}
+body{background:radial-gradient(900px 320px at 50% -80px,var(--soft),transparent),var(--bg);min-height:100vh}
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 14px;border-radius:0 0 24px 24px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+header b{display:flex;align-items:center;gap:10px;font-size:19px}
+header b i{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:16px}
+header button{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.18)}
+main{padding-top:18px;padding-bottom:120px}
+.card{border-radius:var(--r);overflow:hidden}
+input,select,textarea{border-radius:14px;min-height:48px}
+input:focus,select:focus,textarea:focus{box-shadow:var(--ring)}
+button{box-shadow:0 2px 0 rgba(0,0,0,.08);min-height:44px}
+button.sm{min-height:36px}
+button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.auth-hero{text-align:center;margin:22px 0 18px}
+.auth-hero .logo{width:84px;height:84px;margin:0 auto 12px;border-radius:26px;background:linear-gradient(135deg,#0f6b45,#10b981);color:#fff;display:grid;place-items:center;font-size:38px;box-shadow:0 12px 28px rgba(5,150,105,.35)}
+.auth-hero h1{margin:0;font-size:26px;font-weight:800}
+.hero-head{margin:-20px -20px 18px;padding:20px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+.hero-head small{opacity:.85;font-size:13px;font-weight:600}
+.hero-head h1{margin:2px 0 8px;font-size:24px;font-weight:800}
+.hero-head span{display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.alert{display:flex;gap:8px;align-items:flex-start;background:color-mix(in srgb,var(--dn) 10%,transparent);color:var(--dn);border:1px solid color-mix(in srgb,var(--dn) 30%,transparent);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:12px}
+.progress-container{height:10px}
+.opt{border-radius:16px;position:relative}
+.opt:active:not(:disabled){transform:scale(.98)}
+.opt i{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--soft);color:var(--pr);font-size:18px;flex:none}
+.opt.sel i{background:rgba(255,255,255,.22);color:var(--on)}
+.opt.sel::after{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;top:-8px;inset-inline-end:-6px;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:12px;border:2px solid var(--card)}
+.bottom-nav{padding:8px 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;gap:4px;backdrop-filter:blur(12px)}
+.bottom-nav a{flex:1;padding:8px 0;border-radius:14px;transition:background .2s,color .2s}
+.bottom-nav a.active{background:var(--soft)}
+.bottom-nav a.active i{transform:translateY(-2px)}
+#msg{display:flex;align-items:center;gap:10px;bottom:calc(92px + env(safe-area-inset-bottom));border-radius:14px}
+.tabs{scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border-radius:999px;padding:10px 16px;font-size:14px}
+.stats div{background:var(--soft);border:0;border-radius:14px;padding:12px 8px;font-size:13px;color:var(--mu);font-weight:600}
+.stats b{font-size:28px;line-height:1.2}
+th{color:var(--mu);font-size:12px;font-weight:700}
+tr:last-child td{border-bottom:0}
+#adm .card{overflow-x:auto}
+.bub{border-radius:14px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#map{height:min(60vh,420px);border-radius:14px;border:1px solid var(--bd);position:relative;z-index:0}
+.busmk{width:40px;height:40px;border-radius:50%;background:#0f6b45;color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:16px}
+.busmk.old{background:#94a3b8}
+.alert.ok{color:var(--pr);background:var(--soft);border-color:transparent}
 </style>
 </head>
 <body>
@@ -145,7 +192,7 @@ const ERR = {
   'return full': 'مقاعد رحلة العودة ممتلئة.'
 };
 function msg(t, bad) {
-  const m = $('#msg'); m.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
+  const m = $('#msg'); m.innerHTML = `<i class="fa-solid ${bad ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`; m.lastChild.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
   clearTimeout(msg.t); msg.t = setTimeout(() => m.hidden = true, 4000);
 }
 const fail = e => msg(e.message || String(e), true);
@@ -160,11 +207,11 @@ async function route(user) {
   if (error || !p) return fail(error || new Error('لم يتم العثور على الملف الشخصي'));
   p.role === 'admin' ? adminView(p) : studentView(p);
 }
-async function logout() { await sb.auth.signOut(); $('#out').hidden = true; authView(); }
+async function logout() { if (geoId != null) await stopShare(true); await sb.auth.signOut(); $('#out').hidden = true; authView(); }
 
 /* ---------- تسجيل الدخول ---------- */
 function authView(reg) {
-  $('#app').innerHTML = `<div class="card" style="margin-top:40px;"><h2><i class="fa-solid fa-user-lock"></i> ${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
+  $('#app').innerHTML = `<div class="auth-hero"><div class="logo"><i class="fa-solid fa-bus"></i></div><h1>كوستر الجامعة</h1><p class="mu">دهوك ⟷ الموصل · احجز مقعدك بسهولة</p></div><div class="card"><h2><i class="fa-solid fa-user-lock"></i> ${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
   ${reg ? `<label>الاسم الكامل</label><input id="n" autocomplete="name" placeholder="مثال: أحمد محمد">` : ''}
   <label>رقم الهاتف</label><input id="p" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXXX">
   <label>كلمة المرور</label><input id="w" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" placeholder="••••••">
@@ -207,6 +254,7 @@ function switchTab(tab) {
   document.querySelectorAll('.bottom-nav a').forEach(el => el.classList.remove('active'));
   $(`#tab-${tab}`).classList.add('active');
   $(`#nav-${tab}`).classList.add('active');
+  if (tab === 'map') initMap();
 }
 
 async function studentView(p) {
@@ -239,7 +287,7 @@ async function studentView(p) {
   
   let seen = null; try { seen = localStorage.getItem('annSeen'); } catch (e) {}
   const nn = (n.data || []).filter(x => seen && new Date(x.created_at) > new Date(seen)).length;
-  const red = t => `<p style="color:var(--dn); font-size:14px; font-weight:600; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> ${t}</p>`;
+  const red = t => `<div class="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>${t}</span></div>`;
 
   // حساب المقاعد والنسبة المئوية
   const remO = cap - (s ? s.outbound_taken : 0);
@@ -254,8 +302,8 @@ async function studentView(p) {
   <!-- التبويب الأول: الرئيسية -->
   <div id="tab-home" class="tab-content ${currentTab === 'home' ? 'active' : ''}">
     <div class="card">
-      <h2><i class="fa-regular fa-calendar-check"></i> دوام الغد</h2>
-      <p class="mu" style="margin-top:-10px;">${esc(p.full_name)} · ${d}</p>
+      <div class="hero-head"><small>مرحباً ${esc((p.full_name || '').split(' ')[0])} 👋</small><h1>دوام الغد</h1><span><i class="fa-regular fa-calendar"></i> ${new Date(d + 'T12:00:00').toLocaleDateString('ar-IQ-u-nu-latn', {weekday: 'long', day: 'numeric', month: 'long'})}</span></div>
+      
       ${sub.status !== 'active' ? red('اشتراكك موقوف. راجع صاحب الكوستر.') : expired ? red('انتهى اشتراكك. جدّد لتأكيد الدوام.') : soon ? red(`ينتهي اشتراكك في ${sub.end_date}.`) : ''}
       
       ${s ? `
@@ -297,6 +345,15 @@ async function studentView(p) {
     </div>
   </div>
 
+  <div id="tab-map" class="tab-content ${currentTab === 'map' ? 'active' : ''}">
+    <div class="card">
+      <h2><i class="fa-solid fa-location-dot"></i> أين الكوستر؟</h2>
+      <div id="loc-st" class="alert"><i class="fa-solid fa-spinner fa-spin"></i><span>جاري التحميل...</span></div>
+      <div id="map"></div>
+      <button class="sm ghost" style="width:100%;margin-top:12px" onclick="mapObj && lastLoc && lastLoc.lat != null && mapObj.setView([lastLoc.lat, lastLoc.lng], 15)"><i class="fa-solid fa-crosshairs"></i> الذهاب إلى الكوستر</button>
+    </div>
+  </div>
+
   <!-- التبويب الثاني: التنبيهات -->
   <div id="tab-ann" class="tab-content ${currentTab === 'ann' ? 'active' : ''}">
     <div class="card">
@@ -331,12 +388,14 @@ async function studentView(p) {
   <!-- شريط التنقل السفلي -->
   <nav class="bottom-nav">
     <a id="nav-home" class="${currentTab === 'home' ? 'active' : ''}" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> الرئيسية</a>
+    <a id="nav-map" class="${currentTab === 'map' ? 'active' : ''}" onclick="switchTab('map')"><i class="fa-solid fa-location-dot"></i> الكوستر</a>
     <a id="nav-ann" class="${currentTab === 'ann' ? 'active' : ''}" onclick="switchTab('ann')"><i class="fa-solid fa-bell"></i> التنبيهات</a>
     <a id="nav-hist" class="${currentTab === 'hist' ? 'active' : ''}" onclick="switchTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> السجل</a>
     <a id="nav-profile" class="${currentTab === 'profile' ? 'active' : ''}" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i> حسابي</a>
   </nav>`;
 
   pushBox();
+  if (currentTab === 'map') initMap();
   try { if (n.data && n.data.length) localStorage.setItem('annSeen', n.data[0].created_at); else if (!seen) localStorage.setItem('annSeen', new Date().toISOString()); } catch (e) {}
 }
 
@@ -356,7 +415,8 @@ async function redeem() {
 let adminDate = dayStr(1), adminGroup = 'boys';
 async function adminView(p) {
   $('#app').innerHTML = `<div class="tabs">${[['boys', '<i class="fa-solid fa-person"></i> الشباب'], ['girls', '<i class="fa-solid fa-person-dress"></i> البنات'], ['subs', '<i class="fa-solid fa-users"></i> المشتركون'], ['tools', '<i class="fa-solid fa-gear"></i> الرموز والتنبيهات']].map(t =>
-    `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="adm"></div>`;
+    `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="shbox" class="card"></div><div id="adm"></div>`;
+  shareUi();
   adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : listPane();
 }
 const L = 'ar-IQ-u-nu-latn', TZ = 'Asia/Baghdad';
@@ -558,6 +618,74 @@ async function disablePush() {
     if (sub) { await sb.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); }
     msg('تم إيقاف الإشعارات'); pushBox();
   } catch (e) { fail(e); }
+}
+
+/* ---------- موقع الكوستر (GPS) ---------- */
+let mapObj = null, busMk = null, locCh = null, locT = null, lastLoc = null, leafP = null, geoId = null, geoLast = 0, wake = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafP) return leafP;
+  const B = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+  const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = B + 'leaflet.css'; document.head.appendChild(l);
+  leafP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = B + 'leaflet.js'; s.onload = ok; s.onerror = () => { leafP = null; no(new Error('تعذّر تحميل الخريطة')); }; document.head.appendChild(s); });
+  return leafP;
+}
+async function initMap() {
+  const el = $('#map'); if (!el) return;
+  try { await loadLeaflet(); } catch (e) { return fail(e); }
+  if (mapObj && mapObj.getContainer() === el) { mapObj.invalidateSize(); return; }
+  if (mapObj) { mapObj.remove(); busMk = null; }
+  mapObj = L.map(el).setView([36.62, 43.05], 8);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(mapObj);
+  const {data} = await sb.from('bus_location').select('*').eq('id', 1).maybeSingle();
+  if (data) showLoc(data, true);
+  if (!locCh) locCh = sb.channel('bus-loc').on('postgres_changes', {event: 'UPDATE', schema: 'public', table: 'bus_location'}, x => showLoc(x.new)).subscribe();
+  clearInterval(locT); locT = setInterval(() => lastLoc && showLoc(lastLoc), 15000);
+}
+const ago = s => s < 60 ? 'ثوانٍ' : Math.floor(s / 60) + ' دقيقة';
+function showLoc(d, first) {
+  lastLoc = d;
+  const st = $('#loc-st'); if (!st || !mapObj) return;
+  const age = d.updated_at ? (Date.now() - new Date(d.updated_at)) / 1000 : 1e9;
+  const has = d.lat != null && d.lng != null, live = d.is_sharing && has && age < 120;
+  if (!d.is_sharing || !has) {
+    st.className = 'alert'; st.innerHTML = '<i class="fa-solid fa-location-pin-lock"></i><span>صاحب الكوستر لا يشارك موقعه حالياً.</span>';
+    if (busMk) { busMk.remove(); busMk = null; }
+    return;
+  }
+  st.className = live ? 'alert ok' : 'alert';
+  st.innerHTML = live ? `<i class="fa-solid fa-satellite-dish"></i><span>الموقع مباشر · آخر تحديث قبل ${ago(age)}</span>` : `<i class="fa-solid fa-clock"></i><span>انقطع التحديث · آخر موقع قبل ${ago(age)}</span>`;
+  const ic = L.divIcon({className: '', html: `<div class="busmk ${live ? '' : 'old'}"><i class="fa-solid fa-bus"></i></div>`, iconSize: [40, 40], iconAnchor: [20, 20]});
+  if (!busMk) { busMk = L.marker([d.lat, d.lng], {icon: ic}).addTo(mapObj); mapObj.setView([d.lat, d.lng], 15); }
+  else busMk.setLatLng([d.lat, d.lng]).setIcon(ic);
+}
+async function pushLoc(v) {
+  const {error} = await sb.from('bus_location').update({...v, updated_at: new Date().toISOString()}).eq('id', 1);
+  if (error) fail(error);
+}
+async function startShare() {
+  if (!navigator.geolocation) return msg('جهازك لا يدعم تحديد الموقع.', true);
+  geoId = navigator.geolocation.watchPosition(pos => {
+    const t = Date.now(); if (t - geoLast < 5000) return; geoLast = t;
+    const c = pos.coords;
+    pushLoc({lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, heading: c.heading, speed: c.speed, is_sharing: true});
+  }, e => { stopShare(true); msg(e.code === 1 ? 'لم يُسمح بالوصول للموقع. فعّله من إعدادات المتصفح.' : 'تعذّر تحديد الموقع.', true); }, {enableHighAccuracy: true, maximumAge: 5000, timeout: 20000});
+  try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+  msg('بدأت مشاركة موقعك مع الطلاب'); shareUi();
+}
+async function stopShare(silent) {
+  if (geoId != null) navigator.geolocation.clearWatch(geoId);
+  geoId = null; try { wake && wake.release(); } catch (e) {} wake = null;
+  await pushLoc({is_sharing: false});
+  if (!silent) msg('تم إيقاف مشاركة الموقع');
+  shareUi();
+}
+document.addEventListener('visibilitychange', async () => {
+  if (geoId != null && document.visibilityState === 'visible') try { wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+});
+function shareUi() {
+  const el = $('#shbox'); if (!el) return; const on = geoId != null;
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><b><i class="fa-solid fa-location-dot"></i> موقع الكوستر</b><div class="mu">${on ? 'يشاهدك الطلاب الآن · أبقِ الشاشة مفتوحة' : 'غير مشارك مع الطلاب'}</div></div><button class="${on ? 'dn' : ''}" onclick="${on ? 'stopShare()' : 'startShare()'}">${on ? 'إيقاف' : 'بدء المشاركة'}</button></div>`;
 }
 
 boot();
