@@ -2,15 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0f6b45">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>كوستر الجامعة</title>
 <!-- مكتبة الأيقونات -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- مكتبة الخرائط -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <!-- خط Cairo العصري -->
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -107,12 +105,53 @@ button.dn { background: var(--dn); color: #fff; }
 .stats b { display: block; font-size: 22px; color: var(--pr); }
 table { width: 100%; border-collapse: collapse; }
 td, th { padding: 10px 6px; border-bottom: 1px solid var(--bd); text-align: start; font-size: 14px; }
-/* الخريطة الحية */
-#map { width: 100%; height: 340px; border-radius: 12px; z-index: 1; background: var(--bg); }
-.blink { animation: blink 1.2s infinite; }
-@keyframes blink { 50% { opacity: 0.3; } }
-.live-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--dn); margin-inline-end: 6px; }
-.live-dot.on { background: var(--pr); }
+/* ===== تحسينات الواجهة ===== */
+:root{--r:18px;--ring:0 0 0 4px color-mix(in srgb,var(--pr) 18%,transparent);--soft:color-mix(in srgb,var(--pr) 12%,transparent)}
+body{background:radial-gradient(900px 320px at 50% -80px,var(--soft),transparent),var(--bg);min-height:100vh}
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 14px;border-radius:0 0 24px 24px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+header b{display:flex;align-items:center;gap:10px;font-size:19px}
+header b i{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:16px}
+header button{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.18)}
+main{padding-top:18px;padding-bottom:120px}
+.card{border-radius:var(--r);overflow:hidden}
+input,select,textarea{border-radius:14px;min-height:48px}
+input:focus,select:focus,textarea:focus{box-shadow:var(--ring)}
+button{box-shadow:0 2px 0 rgba(0,0,0,.08);min-height:44px}
+button.sm{min-height:36px}
+button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.auth-hero{text-align:center;margin:22px 0 18px}
+.auth-hero .logo{width:84px;height:84px;margin:0 auto 12px;border-radius:26px;background:linear-gradient(135deg,#0f6b45,#10b981);color:#fff;display:grid;place-items:center;font-size:38px;box-shadow:0 12px 28px rgba(5,150,105,.35)}
+.auth-hero h1{margin:0;font-size:26px;font-weight:800}
+.hero-head{margin:-20px -20px 18px;padding:20px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+.hero-head small{opacity:.85;font-size:13px;font-weight:600}
+.hero-head h1{margin:2px 0 8px;font-size:24px;font-weight:800}
+.hero-head span{display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.alert{display:flex;gap:8px;align-items:flex-start;background:color-mix(in srgb,var(--dn) 10%,transparent);color:var(--dn);border:1px solid color-mix(in srgb,var(--dn) 30%,transparent);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:12px}
+.progress-container{height:10px}
+.opt{border-radius:16px;position:relative}
+.opt:active:not(:disabled){transform:scale(.98)}
+.opt i{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--soft);color:var(--pr);font-size:18px;flex:none}
+.opt.sel i{background:rgba(255,255,255,.22);color:var(--on)}
+.opt.sel::after{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;top:-8px;inset-inline-end:-6px;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:12px;border:2px solid var(--card)}
+.bottom-nav{padding:8px 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;gap:4px;backdrop-filter:blur(12px)}
+.bottom-nav a{flex:1;padding:8px 0;border-radius:14px;transition:background .2s,color .2s}
+.bottom-nav a.active{background:var(--soft)}
+.bottom-nav a.active i{transform:translateY(-2px)}
+#msg{display:flex;align-items:center;gap:10px;bottom:calc(92px + env(safe-area-inset-bottom));border-radius:14px}
+.tabs{scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border-radius:999px;padding:10px 16px;font-size:14px}
+.stats div{background:var(--soft);border:0;border-radius:14px;padding:12px 8px;font-size:13px;color:var(--mu);font-weight:600}
+.stats b{font-size:28px;line-height:1.2}
+th{color:var(--mu);font-size:12px;font-weight:700}
+tr:last-child td{border-bottom:0}
+#adm .card{overflow-x:auto}
+.bub{border-radius:14px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#map{height:min(60vh,420px);border-radius:14px;border:1px solid var(--bd);position:relative;z-index:0}
+.busmk{width:40px;height:40px;border-radius:50%;background:#0f6b45;color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:16px}
+.busmk.old{background:#94a3b8}
+.alert.ok{color:var(--pr);background:var(--soft);border-color:transparent}
 </style>
 </head>
 <body>
@@ -132,7 +171,6 @@ td, th { padding: 10px 6px; border-bottom: 1px solid var(--bd); text-align: star
 
 <div id="msg" hidden></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
@@ -154,7 +192,7 @@ const ERR = {
   'return full': 'مقاعد رحلة العودة ممتلئة.'
 };
 function msg(t, bad) {
-  const m = $('#msg'); m.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
+  const m = $('#msg'); m.innerHTML = `<i class="fa-solid ${bad ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span></span>`; m.lastChild.textContent = ERR[t] || t; m.className = bad ? 'err' : 'ok'; m.hidden = false;
   clearTimeout(msg.t); msg.t = setTimeout(() => m.hidden = true, 4000);
 }
 const fail = e => msg(e.message || String(e), true);
@@ -169,11 +207,11 @@ async function route(user) {
   if (error || !p) return fail(error || new Error('لم يتم العثور على الملف الشخصي'));
   p.role === 'admin' ? adminView(p) : studentView(p);
 }
-async function logout() { await sb.auth.signOut(); $('#out').hidden = true; authView(); }
+async function logout() { if (geoId != null) await stopShare(true); await sb.auth.signOut(); $('#out').hidden = true; authView(); }
 
 /* ---------- تسجيل الدخول ---------- */
 function authView(reg) {
-  $('#app').innerHTML = `<div class="card" style="margin-top:40px;"><h2><i class="fa-solid fa-user-lock"></i> ${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
+  $('#app').innerHTML = `<div class="auth-hero"><div class="logo"><i class="fa-solid fa-bus"></i></div><h1>كوستر الجامعة</h1><p class="mu">دهوك ⟷ الموصل · احجز مقعدك بسهولة</p></div><div class="card"><h2><i class="fa-solid fa-user-lock"></i> ${reg ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
   ${reg ? `<label>الاسم الكامل</label><input id="n" autocomplete="name" placeholder="مثال: أحمد محمد">` : ''}
   <label>رقم الهاتف</label><input id="p" type="tel" inputmode="tel" autocomplete="tel" placeholder="07XXXXXXXXX">
   <label>كلمة المرور</label><input id="w" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" placeholder="••••••">
@@ -207,25 +245,22 @@ const OPTS = [
   [false, false, 'لا أداوم', 'لا حجز لأي رحلة', 'fa-bed']
 ];
 let ME = null;
-let SUB = null;
 let currentTab = 'home'; // لتذكر التبويب المفتوح
 const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'];
 
 function switchTab(tab) {
   currentTab = tab;
-  stopMap();
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.bottom-nav a').forEach(el => el.classList.remove('active'));
   $(`#tab-${tab}`).classList.add('active');
   $(`#nav-${tab}`).classList.add('active');
-  if (tab === 'map') startMap();
+  if (tab === 'map') initMap();
 }
 
 async function studentView(p) {
   ME = p;
   const {data: sub} = await sb.from('subscriptions').select('route_id,status,end_date').eq('user_id', p.id).maybeSingle();
   
-  SUB = sub;
   if (!sub) {
     $('#app').innerHTML = `<div class="card"><h2><i class="fa-solid fa-key"></i> تفعيل الحساب</h2><p>لم يُفعّل اشتراكك بعد. أدخل رمز الاشتراك:</p>
     <input id="c" autocapitalize="characters" style="direction:ltr" placeholder="BUS-XXXX"><button onclick="redeem()" style="width:100%">تفعيل الاشتراك</button></div>`;
@@ -252,7 +287,7 @@ async function studentView(p) {
   
   let seen = null; try { seen = localStorage.getItem('annSeen'); } catch (e) {}
   const nn = (n.data || []).filter(x => seen && new Date(x.created_at) > new Date(seen)).length;
-  const red = t => `<p style="color:var(--dn); font-size:14px; font-weight:600; margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation"></i> ${t}</p>`;
+  const red = t => `<div class="alert"><i class="fa-solid fa-triangle-exclamation"></i><span>${t}</span></div>`;
 
   // حساب المقاعد والنسبة المئوية
   const remO = cap - (s ? s.outbound_taken : 0);
@@ -267,8 +302,8 @@ async function studentView(p) {
   <!-- التبويب الأول: الرئيسية -->
   <div id="tab-home" class="tab-content ${currentTab === 'home' ? 'active' : ''}">
     <div class="card">
-      <h2><i class="fa-regular fa-calendar-check"></i> دوام الغد</h2>
-      <p class="mu" style="margin-top:-10px;">${esc(p.full_name)} · ${d}</p>
+      <div class="hero-head"><small>مرحباً ${esc((p.full_name || '').split(' ')[0])} 👋</small><h1>دوام الغد</h1><span><i class="fa-regular fa-calendar"></i> ${new Date(d + 'T12:00:00').toLocaleDateString('ar-IQ-u-nu-latn', {weekday: 'long', day: 'numeric', month: 'long'})}</span></div>
+      
       ${sub.status !== 'active' ? red('اشتراكك موقوف. راجع صاحب الكوستر.') : expired ? red('انتهى اشتراكك. جدّد لتأكيد الدوام.') : soon ? red(`ينتهي اشتراكك في ${sub.end_date}.`) : ''}
       
       ${s ? `
@@ -310,13 +345,12 @@ async function studentView(p) {
     </div>
   </div>
 
-  <!-- تبويب الخريطة الحية -->
   <div id="tab-map" class="tab-content ${currentTab === 'map' ? 'active' : ''}">
     <div class="card">
-      <h2><i class="fa-solid fa-map-location-dot"></i> موقع الكوستر الآن</h2>
-      <p class="mu" style="margin-top:-10px;">يُحدَّث تلقائياً كل 5 ثوانٍ أثناء الرحلة.</p>
+      <h2><i class="fa-solid fa-location-dot"></i> أين الكوستر؟</h2>
+      <div id="loc-st" class="alert"><i class="fa-solid fa-spinner fa-spin"></i><span>جاري التحميل...</span></div>
       <div id="map"></div>
-      <div id="map-info" style="margin-top:12px;"></div>
+      <button class="sm ghost" style="width:100%;margin-top:12px" onclick="mapObj && lastLoc && lastLoc.lat != null && mapObj.setView([lastLoc.lat, lastLoc.lng], 15)"><i class="fa-solid fa-crosshairs"></i> الذهاب إلى الكوستر</button>
     </div>
   </div>
 
@@ -354,13 +388,14 @@ async function studentView(p) {
   <!-- شريط التنقل السفلي -->
   <nav class="bottom-nav">
     <a id="nav-home" class="${currentTab === 'home' ? 'active' : ''}" onclick="switchTab('home')"><i class="fa-solid fa-house"></i> الرئيسية</a>
+    <a id="nav-map" class="${currentTab === 'map' ? 'active' : ''}" onclick="switchTab('map')"><i class="fa-solid fa-location-dot"></i> الكوستر</a>
     <a id="nav-ann" class="${currentTab === 'ann' ? 'active' : ''}" onclick="switchTab('ann')"><i class="fa-solid fa-bell"></i> التنبيهات</a>
     <a id="nav-hist" class="${currentTab === 'hist' ? 'active' : ''}" onclick="switchTab('hist')"><i class="fa-solid fa-clock-rotate-left"></i> السجل</a>
     <a id="nav-profile" class="${currentTab === 'profile' ? 'active' : ''}" onclick="switchTab('profile')"><i class="fa-solid fa-user"></i> حسابي</a>
-    <a id="nav-map" class="${currentTab === 'map' ? 'active' : ''}" onclick="switchTab('map')"><i class="fa-solid fa-map-location-dot"></i> الخريطة</a>
   </nav>`;
 
   pushBox();
+  if (currentTab === 'map') initMap();
   try { if (n.data && n.data.length) localStorage.setItem('annSeen', n.data[0].created_at); else if (!seen) localStorage.setItem('annSeen', new Date().toISOString()); } catch (e) {}
 }
 
@@ -379,9 +414,10 @@ async function redeem() {
 /* ---------- صاحب الكوستر (الأدمن) ---------- */
 let adminDate = dayStr(1), adminGroup = 'boys';
 async function adminView(p) {
-  $('#app').innerHTML = `<div class="tabs">${[['boys', '<i class="fa-solid fa-person"></i> الشباب'], ['girls', '<i class="fa-solid fa-person-dress"></i> البنات'], ['subs', '<i class="fa-solid fa-users"></i> المشتركون'], ['tools', '<i class="fa-solid fa-gear"></i> الرموز والتنبيهات'], ['live', '<i class="fa-solid fa-tower-broadcast"></i> مباشر']].map(t =>
-    `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="adm"></div>`;
-  adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : adminGroup === 'live' ? livePane() : listPane();
+  $('#app').innerHTML = `<div class="tabs">${[['boys', '<i class="fa-solid fa-person"></i> الشباب'], ['girls', '<i class="fa-solid fa-person-dress"></i> البنات'], ['subs', '<i class="fa-solid fa-users"></i> المشتركون'], ['tools', '<i class="fa-solid fa-gear"></i> الرموز والتنبيهات']].map(t =>
+    `<button class="${adminGroup === t[0] ? 'on' : ''}" onclick="adminGroup='${t[0]}';adminView()">${t[1]}</button>`).join('')}</div><div id="shbox" class="card"></div><div id="adm"></div>`;
+  shareUi();
+  adminGroup === 'tools' ? toolsPane() : adminGroup === 'subs' ? subsPane() : listPane();
 }
 const L = 'ar-IQ-u-nu-latn', TZ = 'Asia/Baghdad';
 const dKey = t => new Date(t).toLocaleDateString('en-CA', {timeZone: TZ});
@@ -584,119 +620,84 @@ async function disablePush() {
   } catch (e) { fail(e); }
 }
 
-/* ---------- التتبع الحي للكوستر ---------- */
-let mapObj = null, mapMarker = null, mapTimer = null;
-let liveWatch = null, liveTimer = null, livePos = null, liveRoute = null;
-
-const busIcon = () => L.divIcon({
-  className: '',
-  html: '<div style="background:var(--pr);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);"><i class="fa-solid fa-bus" style="font-size:19px"></i></div>',
-  iconSize: [40, 40], iconAnchor: [20, 20]
-});
-
-/* عرض الطالب: الخريطة الحية */
-async function startMap() {
-  const box = $('#map');
-  if (!box || !window.L) return;
-  if (!mapObj) {
-    mapObj = L.map('map').setView([36.866, 42.99], 11); // دهوك افتراضياً
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap', maxZoom: 19}).addTo(mapObj);
-    mapMarker = L.marker([0, 0], {icon: busIcon()});
-  }
-  setTimeout(() => mapObj.invalidateSize(), 150);
-  await refreshMap();
-  clearInterval(mapTimer);
-  mapTimer = setInterval(refreshMap, 5000);
+/* ---------- موقع الكوستر (GPS) ---------- */
+let mapObj = null, busMk = null, locCh = null, locT = null, lastLoc = null, leafP = null, geoId = null, geoLast = 0, wake = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafP) return leafP;
+  const B = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
+  const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = B + 'leaflet.css'; document.head.appendChild(l);
+  leafP = new Promise((ok, no) => { const s = document.createElement('script'); s.src = B + 'leaflet.js'; s.onload = ok; s.onerror = () => { leafP = null; no(new Error('تعذّر تحميل الخريطة')); }; document.head.appendChild(s); });
+  return leafP;
 }
-function stopMap() { clearInterval(mapTimer); mapTimer = null; }
-
-async function refreshMap() {
-  if (!SUB) return;
-  const info = $('#map-info'); if (!info) return;
-  const {data} = await sb.from('bus_locations').select('*').eq('route_id', SUB.route_id).maybeSingle();
-  if (!data) {
-    if (mapObj.hasLayer(mapMarker)) mapObj.removeLayer(mapMarker);
-    info.innerHTML = '<p class="mu" style="margin:0;"><span class="live-dot"></span>لا توجد رحلة نشطة حالياً. تظهر الخريطة فقط أثناء رحلة الكوستر.</p>';
+async function initMap() {
+  const el = $('#map'); if (!el) return;
+  try { await loadLeaflet(); } catch (e) { return fail(e); }
+  if (mapObj && mapObj.getContainer() === el) { mapObj.invalidateSize(); return; }
+  if (mapObj) { mapObj.remove(); busMk = null; }
+  mapObj = L.map(el).setView([36.62, 43.05], 8);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '© OpenStreetMap'}).addTo(mapObj);
+  const {data} = await sb.from('bus_location').select('*').eq('id', 1).maybeSingle();
+  if (data) showLoc(data, true);
+  if (!locCh) locCh = sb.channel('bus-loc').on('postgres_changes', {event: 'UPDATE', schema: 'public', table: 'bus_location'}, x => showLoc(x.new)).subscribe();
+  clearInterval(locT); locT = setInterval(() => lastLoc && showLoc(lastLoc), 15000);
+}
+const ago = s => s < 60 ? 'ثوانٍ' : Math.floor(s / 60) + ' دقيقة';
+function showLoc(d, first) {
+  lastLoc = d;
+  const st = $('#loc-st'); if (!st || !mapObj) return;
+  const age = d.updated_at ? (Date.now() - new Date(d.updated_at)) / 1000 : 1e9;
+  const has = d.lat != null && d.lng != null, live = d.is_sharing && has && age < 120;
+  if (!d.is_sharing || !has) {
+    st.className = 'alert'; st.innerHTML = '<i class="fa-solid fa-location-pin-lock"></i><span>صاحب الكوستر لا يشارك موقعه حالياً.</span>';
+    if (busMk) { busMk.remove(); busMk = null; }
     return;
   }
-  const ll = [data.lat, data.lng];
-  if (!mapObj.hasLayer(mapMarker)) { mapMarker.addTo(mapObj); mapObj.setView(ll, 13); }
-  mapMarker.setLatLng(ll);
-  mapObj.panTo(ll, {animate: true});
-  const dir = data.trip_direction === 'return' ? 'عودة · الموصل ← دهوك' : 'ذهاب · دهوك ← الموصل';
-  const t = new Date(data.updated_at).toLocaleTimeString('ar-IQ-u-nu-latn', {timeZone: 'Asia/Baghdad', hour: 'numeric', minute: '2-digit'});
-  info.innerHTML = `<div style="display:flex; gap:8px; flex-wrap:wrap; font-size:13px;">
-    <span class="bub" style="flex:1; margin:0;"><span class="live-dot on blink"></span><b>${dir}</b></span>
-    ${data.speed_kmh ? `<span class="bub" style="flex:1; margin:0;"><b>${Math.round(data.speed_kmh)}</b> كم/س</span>` : ''}
-    <span class="bub" style="flex:1; margin:0;">آخر تحديث <b>${t}</b></span>
-  </div>`;
+  st.className = live ? 'alert ok' : 'alert';
+  st.innerHTML = live ? `<i class="fa-solid fa-satellite-dish"></i><span>الموقع مباشر · آخر تحديث قبل ${ago(age)}</span>` : `<i class="fa-solid fa-clock"></i><span>انقطع التحديث · آخر موقع قبل ${ago(age)}</span>`;
+  const ic = L.divIcon({className: '', html: `<div class="busmk ${live ? '' : 'old'}"><i class="fa-solid fa-bus"></i></div>`, iconSize: [40, 40], iconAnchor: [20, 20]});
+  if (!busMk) { busMk = L.marker([d.lat, d.lng], {icon: ic}).addTo(mapObj); mapObj.setView([d.lat, d.lng], 15); }
+  else busMk.setLatLng([d.lat, d.lng]).setIcon(ic);
 }
-
-/* عرض السائق/الأدمن: بث الموقع */
-async function livePane() {
-  const {data: routes, error} = await sb.from('routes').select('id,name');
-  if (error) return fail(error);
-  $('#adm').innerHTML = `<div class="card">
-    <h2><i class="fa-solid fa-tower-broadcast"></i> بث موقع الكوستر</h2>
-    <p class="mu" style="margin-top:-10px;">افتح هذه الصفحة على هاتف السائق، اضغط "بدء الرحلة" واترك التطبيق يعمل. سيظهر موقع الكوستر لحظياً للطلاب على خريطتهم.</p>
-    <label>الخط</label>
-    <select id="lv-route">${(routes || []).map(r => `<option value="${r.id}">${esc(r.name || 'خط')}</option>`).join('')}</select>
-    <label>الاتجاه</label>
-    <select id="lv-dir"><option value="outbound">ذهاب — دهوك إلى الموصل</option><option value="return">عودة — الموصل إلى دهوك</option></select>
-    <div id="lv-status" class="mu" style="margin:12px 0; font-weight:600;">الرحلة متوقفة.</div>
-    <div style="display:flex; gap:8px;">
-      <button id="lv-start" style="flex:1" onclick="startLive()" ${liveWatch ? 'disabled' : ''}><i class="fa-solid fa-play"></i> بدء الرحلة</button>
-      <button id="lv-stop" class="dn" style="flex:1" ${liveWatch ? '' : 'disabled'} onclick="stopLive()"><i class="fa-solid fa-stop"></i> إنهاء الرحلة</button>
-    </div></div>
-  <div class="card"><h2><i class="fa-solid fa-circle-info"></i> ملاحظات مهمة</h2>
-    <p class="mu">• يُطلب إذن الوصول للموقع عند البدء — اختر "السماح".<br>• يحتاج الهاتف إشارة GPS وإنترنت.<br>• عند إنهاء الرحلة يختفي موقع الكوستر فوراً من خرائط الطلاب.<br>• يتم تجاهل القراءات غير الدقيقة (أكثر من 80 متراً).</p></div>`;
-  if (!(routes || []).length) $('#lv-status').innerHTML = '<span style="color:var(--dn)">لا توجد خطوط في جدول routes. نفّذ ملف tracking.sql أولاً.</span>';
-  else if (liveWatch) reflectLive();
+async function pushLoc(v) {
+  const {error} = await sb.from('bus_location').update({...v, updated_at: new Date().toISOString()}).eq('id', 1);
+  if (error && Date.now() - (pushLoc.t || 0) > 60000) { pushLoc.t = Date.now(); fail(error); }
 }
-function reflectLive() {
-  const st = $('#lv-status'); if (st) st.innerHTML = '<span style="color:var(--pr);font-weight:700"><span class="live-dot on blink"></span> جاري البث المباشر...</span>';
-  const s = $('#lv-start'), e = $('#lv-stop');
-  if (s) s.disabled = true; if (e) e.disabled = false;
+let geoPos = null, geoHb = null, geoTick = 0;
+function sendPos() { if (geoPos) { geoTick = Date.now(); pushLoc({...geoPos, is_sharing: true}); } }
+function watchGeo() {
+  if (geoId != null) navigator.geolocation.clearWatch(geoId);
+  geoId = navigator.geolocation.watchPosition(pos => {
+    const c = pos.coords; geoPos = {lat: c.latitude, lng: c.longitude, accuracy: c.accuracy, heading: c.heading, speed: c.speed};
+    if (Date.now() - geoTick >= 4000) sendPos();
+  }, e => { if (e.code === 1) { stopShare(true); msg('لم يُسمح بالوصول للموقع. فعّله من إعدادات المتصفح.', true); } },
+  {enableHighAccuracy: true, maximumAge: 0, timeout: 30000});
 }
-function startLive() {
-  if (!navigator.geolocation) return msg('المتصفح لا يدعم تحديد الموقع.', true);
-  liveRoute = $('#lv-route').value;
-  if (!liveRoute) return msg('اختر الخط أولاً.', true);
-  livePos = null;
-  liveWatch = navigator.geolocation.watchPosition(p => { livePos = p; }, e => { stopLive(); fail(e); },
-    {enableHighAccuracy: true, maximumAge: 2000, timeout: 20000});
-  clearInterval(liveTimer);
-  liveTimer = setInterval(pushLive, 5000);
-  pushLive();
-  reflectLive();
+async function lockScreen() {
+  try { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { if (geoId != null && document.visibilityState === 'visible') lockScreen(); }); } catch (e) {}
 }
-async function pushLive() {
-  if (!livePos || !liveRoute) return;
-  if (livePos.coords.accuracy && livePos.coords.accuracy > 80) return; // تجاهل القراءات الرديئة
-  const {data: {user}} = await sb.auth.getUser();
-  const {error} = await sb.from('bus_locations').upsert({
-    route_id: liveRoute,
-    trip_direction: $('#lv-dir') ? $('#lv-dir').value : 'outbound',
-    lat: livePos.coords.latitude,
-    lng: livePos.coords.longitude,
-    heading: livePos.coords.heading,
-    speed_kmh: livePos.coords.speed != null ? +(livePos.coords.speed * 3.6).toFixed(1) : null,
-    driver_id: user ? user.id : null,
-    updated_at: new Date().toISOString()
-  });
-  if (error) { stopLive(); return fail(error); }
-  const t = new Date().toLocaleTimeString('ar-IQ-u-nu-latn', {timeZone: 'Asia/Baghdad', hour: 'numeric', minute: '2-digit', second: '2-digit'});
-  const st = $('#lv-status');
-  if (st) st.innerHTML = `<span style="color:var(--pr);font-weight:700"><span class="live-dot on blink"></span> بث مباشر</span> · دقة ±${Math.round(livePos.coords.accuracy || 0)}م · آخر إرسال ${t}`;
+async function startShare() {
+  if (!navigator.geolocation) return msg('جهازك لا يدعم تحديد الموقع.', true);
+  watchGeo(); lockScreen();
+  clearInterval(geoHb); geoHb = setInterval(() => { if (geoPos && Date.now() - geoTick > 8000) sendPos(); }, 10000);
+  msg('بدأت مشاركة موقعك مع الطلاب'); shareUi();
 }
-async function stopLive() {
-  if (liveWatch != null) navigator.geolocation.clearWatch(liveWatch);
-  clearInterval(liveTimer);
-  liveWatch = liveTimer = livePos = null;
-  if (liveRoute) { await sb.from('bus_locations').delete().eq('route_id', liveRoute); liveRoute = null; }
-  const s = $('#lv-start'), e = $('#lv-stop'), st = $('#lv-status');
-  if (s) s.disabled = false; if (e) e.disabled = true;
-  if (st) st.innerHTML = 'انتهت الرحلة. لم يعد موقع الكوستر ظاهراً للطلاب.';
+async function stopShare(silent) {
+  if (geoId != null) navigator.geolocation.clearWatch(geoId);
+  clearInterval(geoHb); geoId = null; geoPos = null;
+  try { wake && wake.release(); } catch (e) {} wake = null;
+  await pushLoc({is_sharing: false});
+  if (!silent) msg('تم إيقاف مشاركة الموقع');
+  shareUi();
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (geoId != null) { const gap = Date.now() - geoTick; watchGeo(); lockScreen(); if (gap > 30000) msg('انقطع إرسال موقعك أثناء خروجك من التطبيق. أبقِه مفتوحاً.', true); }
+  else if (mapObj && $('#map')) sb.from('bus_location').select('*').eq('id', 1).maybeSingle().then(r => r.data && showLoc(r.data));
+});
+function shareUi() {
+  const el = $('#shbox'); if (!el) return; const on = geoId != null;
+  el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><div><b><i class="fa-solid fa-location-dot"></i> موقع الكوستر</b><div class="mu">${on ? 'يشاهدك الطلاب الآن · أبقِ التطبيق مفتوحاً والشاشة مضاءة' : 'غير مشارك مع الطلاب'}</div></div><button class="${on ? 'dn' : ''}" onclick="${on ? 'stopShare()' : 'startShare()'}">${on ? 'إيقاف' : 'بدء المشاركة'}</button></div>`;
 }
 
 boot();
