@@ -106,6 +106,7 @@ final class AppState: ObservableObject {
     let client: NativeSupabaseClient?
     private let accessTokenKey = "accessToken"
     private let refreshTokenKey = "refreshToken"
+    private let userIdKey = "userId"
     private var accessToken: String?
     let location = NativeLocationManager()
     var nativeStudentService: NativeStudentService? {
@@ -135,7 +136,7 @@ final class AppState: ObservableObject {
         defer { isLoading = false }
         guard let client, let accessToken else { return }
         do {
-            let userId = UserDefaults.standard.string(forKey: "coaster.native.userId") ?? ""
+            let userId = NativeKeychain.shared.get(userIdKey) ?? ""
             profile = try await client.profile(userId: userId, accessToken: accessToken)
         } catch { signOut() }
     }
@@ -149,7 +150,7 @@ final class AppState: ObservableObject {
             accessToken = response.accessToken
             NativeKeychain.shared.set(response.accessToken, key: accessTokenKey)
             if let refreshToken = response.refreshToken { NativeKeychain.shared.set(refreshToken, key: refreshTokenKey) }
-            UserDefaults.standard.set(response.user.id, forKey: "coaster.native.userId")
+            NativeKeychain.shared.set(response.user.id, key: userIdKey)
             profile = try await client.profile(userId: response.user.id, accessToken: response.accessToken)
         } catch { errorMessage = error.localizedDescription }
     }
@@ -164,7 +165,7 @@ final class AppState: ObservableObject {
             accessToken = response.accessToken
             NativeKeychain.shared.set(response.accessToken, key: accessTokenKey)
             if let refreshToken = response.refreshToken { NativeKeychain.shared.set(refreshToken, key: refreshTokenKey) }
-            UserDefaults.standard.set(response.user.id, forKey: "coaster.native.userId")
+            NativeKeychain.shared.set(response.user.id, key: userIdKey)
             try await NativeStudentService(client: client, accessToken: response.accessToken).redeem(code: code)
             profile = try await client.profile(userId: response.user.id, accessToken: response.accessToken)
         } catch { errorMessage = error.localizedDescription }
@@ -174,7 +175,7 @@ final class AppState: ObservableObject {
         accessToken = nil; profile = nil; location.stop()
         NativeKeychain.shared.remove(accessTokenKey)
         NativeKeychain.shared.remove(refreshTokenKey)
-        UserDefaults.standard.removeObject(forKey: "coaster.native.userId")
+        NativeKeychain.shared.remove(userIdKey)
     }
 
     func enableNotifications() async {

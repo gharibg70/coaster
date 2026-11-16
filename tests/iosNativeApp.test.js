@@ -45,6 +45,7 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(security, /requestAuthorization/);
   assert.match(security, /didRegisterForRemoteNotificationsWithDeviceToken/);
   assert.doesNotMatch(native, /set\(response\.accessToken, forKey: accessTokenKey\)/);
+  assert.doesNotMatch(native, /coaster\.native\.userId/);
   assert.doesNotMatch(native, /WKWebView|Capacitor/);
 });
 
