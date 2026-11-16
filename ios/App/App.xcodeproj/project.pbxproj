@@ -11,6 +11,7 @@
 			A10000030000000000000003 /* NativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000040000000000000004 /* NativeApp.swift */; };
 			A10000050000000000000005 /* NativeStudent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000060000000000000006 /* NativeStudent.swift */; };
 			A10000070000000000000007 /* NativeInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000080000000000000008 /* NativeInsights.swift */; };
+			A10000090000000000000009 /* NativeChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000100000000000000010 /* NativeChat.swift */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -19,6 +20,7 @@
 			A10000040000000000000004 /* NativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeApp.swift; sourceTree = "<group>"; };
 			A10000060000000000000006 /* NativeStudent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeStudent.swift; sourceTree = "<group>"; };
 			A10000080000000000000008 /* NativeInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeInsights.swift; sourceTree = "<group>"; };
+			A10000100000000000000010 /* NativeChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeChat.swift; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -60,6 +62,7 @@
 				A10000040000000000000004 /* NativeApp.swift */,
 				A10000060000000000000006 /* NativeStudent.swift */,
 				A10000080000000000000008 /* NativeInsights.swift */,
+				A10000100000000000000010 /* NativeChat.swift */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3131FED79650016851F /* Info.plist */,
 			);
@@ -140,6 +143,7 @@
 				A10000030000000000000003 /* NativeApp.swift in Sources */,
 				A10000050000000000000005 /* NativeStudent.swift in Sources */,
 				A10000070000000000000007 /* NativeInsights.swift in Sources */,
+				A10000090000000000000009 /* NativeChat.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

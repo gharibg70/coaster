@@ -246,6 +246,10 @@ struct StudentHomeView: View {
             announcementsView.tabItem { Label("التنبيهات", systemImage: "bell.fill") }.tag(2)
             historyView.tabItem { Label("السجل", systemImage: "clock.fill") }.tag(3)
             NativeInsightsView(model: model).tabItem { Label("الطريق", systemImage: "chart.line.uptrend.xyaxis") }.tag(4)
+            if let chat = state.nativeChatService {
+                NativeChatView(service: chat, room: state.profile?.groupType == "girls" ? "girls" : "boys")
+                    .tabItem { Label("الدردشة", systemImage: "message.fill") }.tag(5)
+            }
         }
         .environment(\.layoutDirection, .rightToLeft)
         .task { await model.load() }

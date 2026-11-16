@@ -110,6 +110,10 @@ final class AppState: ObservableObject {
         guard let client, let accessToken else { return nil }
         return NativeStudentService(client: client, accessToken: accessToken)
     }
+    var nativeChatService: NativeChatService? {
+        guard let client, let accessToken else { return nil }
+        return NativeChatService(client: client, accessToken: accessToken)
+    }
 
     init() {
         if let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,

@@ -6,6 +6,7 @@ const project = new URL('../ios/App/', import.meta.url);
 const native = readFileSync(new URL('App/NativeApp.swift', project), 'utf8');
 const student = readFileSync(new URL('App/NativeStudent.swift', project), 'utf8');
 const insights = readFileSync(new URL('App/NativeInsights.swift', project), 'utf8');
+const chat = readFileSync(new URL('App/NativeChat.swift', project), 'utf8');
 const app = readFileSync(new URL('App/CoasterApp.swift', project), 'utf8');
 const pbx = readFileSync(new URL('App.xcodeproj/project.pbxproj', project), 'utf8');
 const plist = readFileSync(new URL('App/Info.plist', project), 'utf8');
@@ -30,6 +31,10 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(insights, /get_road_pulse/);
   assert.match(insights, /NativeArrivalReminderView/);
   assert.match(insights, /radiusMeters/);
+  assert.match(chat, /chat_room_access/);
+  assert.match(chat, /send_chat_room_message/);
+  assert.match(chat, /report_student_chat_room_message/);
+  assert.match(chat, /struct NativeChatView: View/);
   assert.doesNotMatch(native, /WKWebView|Capacitor/);
 });
 
@@ -38,6 +43,7 @@ test('ios_target_does_not_compile_or_link_capacitor_webview_sources', () => {
   assert.match(pbx, /NativeApp\.swift in Sources/);
   assert.match(pbx, /NativeStudent\.swift in Sources/);
   assert.match(pbx, /NativeInsights\.swift in Sources/);
+  assert.match(pbx, /NativeChat\.swift in Sources/);
   assert.doesNotMatch(pbx, /CapApp-SPM|Capacitor|capacitor\.config|public in Resources/);
   assert.equal(existsSync(new URL('CapApp-SPM/', project)), false);
 });
