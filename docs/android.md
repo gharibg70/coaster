@@ -4,7 +4,7 @@
 
 ## تنزيل APK التجريبي
 
-بعد نجاح تشغيل **Build Android APK** في GitHub Actions، افتح تشغيل workflow في مستودع `gharibg70/coaster-react-vite` ونزّل artifact باسم `coaster-android-debug`. فك ضغط الملف `app-debug.apk` ثم ثبته على جهاز Android. قد يطلب Android السماح بالتثبيت من مصدر غير معروف للملف الذي استخدمته.
+بعد نجاح تشغيل **Build Android APK** في GitHub Actions، افتح [صفحة تشغيل بناء APK](https://github.com/gharibg70/coaster/actions/workflows/android-apk.yml) في مستودع `gharibg70/coaster` ونزّل artifact باسم `coaster-android-debug`. فك ضغط الملف `app-debug.apk` ثم ثبته على جهاز Android. قد يطلب Android السماح بالتثبيت من مصدر غير معروف للملف الذي استخدمته.
 
 هذا APK موقّع بمفتاح debug، للاختبار والتثبيت اليدوي فقط. لا يحتوي على مفتاح إصدار، ولا يُنشر إلى Google Play، ولا يخرج AAB. لا تستخدم debug APK كإصدار إنتاجي.
 
