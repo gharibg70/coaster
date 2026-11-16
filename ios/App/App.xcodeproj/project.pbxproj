@@ -8,13 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		A10000010000000000000001 /* CoasterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000002 /* CoasterApp.swift */; };
-		A10000030000000000000003 /* NativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000040000000000000004 /* NativeApp.swift */; };
+			A10000030000000000000003 /* NativeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000040000000000000004 /* NativeApp.swift */; };
+			A10000050000000000000005 /* NativeStudent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000060000000000000006 /* NativeStudent.swift */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A10000020000000000000002 /* CoasterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoasterApp.swift; sourceTree = "<group>"; };
-		A10000040000000000000004 /* NativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeApp.swift; sourceTree = "<group>"; };
+			A10000040000000000000004 /* NativeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeApp.swift; sourceTree = "<group>"; };
+			A10000060000000000000006 /* NativeStudent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeStudent.swift; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -54,6 +56,7 @@
 			children = (
 				A10000020000000000000002 /* CoasterApp.swift */,
 				A10000040000000000000004 /* NativeApp.swift */,
+				A10000060000000000000006 /* NativeStudent.swift */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3131FED79650016851F /* Info.plist */,
 			);
@@ -132,6 +135,7 @@
 			files = (
 				A10000010000000000000001 /* CoasterApp.swift in Sources */,
 				A10000030000000000000003 /* NativeApp.swift in Sources */,
+				A10000050000000000000005 /* NativeStudent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

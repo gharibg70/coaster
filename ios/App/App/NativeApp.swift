@@ -97,6 +97,10 @@ final class AppState: ObservableObject {
     private let accessTokenKey = "coaster.native.accessToken"
     private var accessToken: String?
     let location = NativeLocationManager()
+    var nativeStudentService: NativeStudentService? {
+        guard let client, let accessToken else { return nil }
+        return NativeStudentService(client: client, accessToken: accessToken)
+    }
 
     init() {
         if let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
@@ -154,7 +158,11 @@ struct RootView: View {
     var body: some View {
         Group {
             if state.isLoading { ProgressView("جاري التحميل…") }
-            else if let profile = state.profile { HomeView(profile: profile) }
+            else if let profile = state.profile {
+                if profile.role == "admin" { HomeView(profile: profile) }
+                else if let service = state.nativeStudentService { StudentHomeView(service: service, profileId: profile.id) }
+                else { LoginView() }
+            }
             else { LoginView() }
         }
         .tint(Color(red: 0.04, green: 0.72, blue: 0.47))
