@@ -1,7 +1,7 @@
 export function createGeolocationController({ platform, nativeGeolocation, webGeolocation }) {
   return {
     async watch(onPosition, onError, options) {
-      if (platform === 'android') {
+      if (platform === 'android' || platform === 'ios') {
         if (!nativeGeolocation) throw new Error('Native location is unavailable.');
         let permission = await nativeGeolocation.checkPermissions();
         if (permission.location !== 'granted') {
@@ -12,7 +12,7 @@ export function createGeolocationController({ platform, nativeGeolocation, webGe
           if (error) onError(error);
           else if (position) onPosition(position);
         });
-        return { platform: 'android', id };
+        return { platform, id };
       }
 
       if (!webGeolocation?.watchPosition) throw new Error('Geolocation is unavailable.');
@@ -22,7 +22,7 @@ export function createGeolocationController({ platform, nativeGeolocation, webGe
 
     async clear(handle) {
       if (!handle) return;
-      if (handle.platform === 'android') {
+      if (handle.platform === 'android' || handle.platform === 'ios') {
         await nativeGeolocation?.clearWatch({ id: handle.id });
       } else if (handle.platform === 'web') {
         webGeolocation?.clearWatch?.(handle.id);

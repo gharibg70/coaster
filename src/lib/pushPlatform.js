@@ -1,3 +1,3 @@
 export function getPushMode(platform) {
-  return platform === 'android' ? 'native-not-configured' : 'web-push';
+  return platform === 'android' || platform === 'ios' ? 'native-not-configured' : 'web-push';
 }
