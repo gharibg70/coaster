@@ -36,7 +36,7 @@ export default function App() {
   useEffect(() => {
     if (!supabase) { setLoading(false); return; }
     let active = true;
-    supabase.auth.getSession().then(async ({ data, error }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       // An initial session probe may fail transiently in a native WebView. The
       // anonymous login screen is still usable, so do not show that probe
       // failure as if the user's login had failed.
@@ -45,8 +45,11 @@ export default function App() {
     }).catch(() => {
       if (active) setLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
+      // getSession above restores INITIAL_SESSION explicitly. Handling the
+      // same event again can race profile loading in LiveContainer.
+      if (event === 'INITIAL_SESSION') return;
       if (!session) { setUser(null); setProfile(null); }
       else queueMicrotask(() => route(session.user).catch(reportError));
     });

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const supabaseSource = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8');
+const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
 
 test('capacitor_config_uses_approved_app_id_and_dist', () => {
   const configPath = new URL('../capacitor.config.json', import.meta.url);
@@ -37,6 +38,11 @@ test('supabase_client_disables_redirect_session_detection_for_capacitor', () => 
   assert.match(supabaseSource, /detectSessionInUrl:\s*false/);
   assert.match(supabaseSource, /persistSession:\s*true/);
   assert.match(supabaseSource, /autoRefreshToken:\s*true/);
+});
+
+test('app_does_not_process_supabase_initial_session_twice', () => {
+  assert.match(appSource, /event === 'INITIAL_SESSION'/);
+  assert.match(appSource, /getSession\(\)/);
 });
 
 test('android_manifest_requests_precise_and_approximate_location_only_in_foreground', () => {
