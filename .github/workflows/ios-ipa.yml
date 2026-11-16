@@ -40,8 +40,10 @@ jobs:
       - name: Verify Xcode version
         shell: bash
         run: |
-          xcodebuild -version
-          XCODE_VERSION=$(xcodebuild -version | awk '/^Xcode / { print $2; exit }')
+          XCODE_VERSION_OUTPUT=$(mktemp)
+          trap 'rm -f "$XCODE_VERSION_OUTPUT"' EXIT
+          xcodebuild -version | tee "$XCODE_VERSION_OUTPUT"
+          XCODE_VERSION=$(awk '/^Xcode / { print $2; exit }' "$XCODE_VERSION_OUTPUT")
           XCODE_MAJOR=${XCODE_VERSION%%.*}
           if [ "$XCODE_MAJOR" -lt 26 ]; then
             echo "Xcode 26.0 or newer is required; found $XCODE_VERSION on runner $RUNNER_OS." >&2
