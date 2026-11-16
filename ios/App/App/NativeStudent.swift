@@ -138,9 +138,8 @@ struct NativeStudentService {
     }
 
     private func serviceDate(offset: Int) -> String {
-        let calendar = Calendar(identifier: .gregorian)
-        var zone = TimeZone(identifier: "Asia/Baghdad")!
-        var calendar = calendar
+        var calendar = Calendar(identifier: .gregorian)
+        let zone = TimeZone(identifier: "Asia/Baghdad")!
         calendar.timeZone = zone
         let date = calendar.date(byAdding: .day, value: offset, to: Date())!
         let formatter = DateFormatter()
@@ -167,7 +166,7 @@ final class NativeStudentViewModel: ObservableObject {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { data = try await service.load(profileId: profileId) }
-        catch { error = errorMessage(error) }
+        catch { self.error = errorMessage(error) }
     }
 
     func refreshBus() async {
@@ -182,14 +181,14 @@ final class NativeStudentViewModel: ObservableObject {
             try await service.setAttendance(routeId: subscription.routeId, date: data?.date ?? "", outbound: outbound, returnTrip: returnTrip)
             message = "تم حفظ اختيارك بنجاح"
             await load()
-        } catch { error = errorMessage(error) }
+        } catch { self.error = errorMessage(error) }
     }
 
     func redeem(_ code: String) async {
         guard !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         isBusy = true; defer { isBusy = false }
         do { try await service.redeem(code: code.trimmingCharacters(in: .whitespacesAndNewlines)); message = "تم تفعيل الاشتراك"; await load() }
-        catch { error = errorMessage(error) }
+        catch { self.error = errorMessage(error) }
     }
 
     private func errorMessage(_ error: Error) -> String { (error as? LocalizedError)?.errorDescription ?? "تعذر الاتصال بالخدمة." }
