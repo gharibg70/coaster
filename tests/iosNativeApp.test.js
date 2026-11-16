@@ -15,6 +15,9 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(native, /struct LoginView: View/);
   assert.match(native, /URLSession\.shared/);
   assert.match(native, /CLLocationManager/);
+  assert.match(native, /func signUp\(name: String/);
+  assert.match(native, /redeem\(code: code\)/);
+  assert.match(native, /حساب جديد/);
   assert.match(student, /struct StudentHomeView: View/);
   assert.match(student, /struct NativeBusMapView: View/);
   assert.match(student, /set_my_attendance/);

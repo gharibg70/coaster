@@ -59,6 +59,15 @@ struct NativeSupabaseClient {
         return try decoder.decode(AuthResponse.self, from: data)
     }
 
+    func signUp(name: String, phone: String, password: String) async throws -> AuthResponse {
+        let email = phone.contains("@") ? phone.trimmingCharacters(in: .whitespacesAndNewlines) : phone.filter { $0.isNumber } + "@bus.app"
+        let body: [String: Any] = ["email": email, "password": password, "data": ["full_name": name, "phone": phone]]
+        let dataBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await request(path: "/auth/v1/signup", method: "POST", body: dataBody)
+        guard (200..<300).contains(response.statusCode) else { throw NativeError.server(message(from: data) ?? "تعذر إنشاء الحساب.") }
+        return try decoder.decode(AuthResponse.self, from: data)
+    }
+
     func profile(userId: String, accessToken: String) async throws -> NativeProfile {
         let path = "/rest/v1/profiles?id=eq.\(userId)&select=id,full_name,phone,role,group_type&limit=1"
         let (data, response) = try await request(path: path, accessToken: accessToken)
@@ -134,6 +143,21 @@ final class AppState: ObservableObject {
         } catch { errorMessage = error.localizedDescription }
     }
 
+    func signUp(name: String, phone: String, password: String, code: String) async {
+        errorMessage = nil; isBusy = true
+        defer { isBusy = false }
+        do {
+            guard let client else { throw NativeError.invalidConfiguration }
+            let response = try await client.signUp(name: name, phone: phone, password: password)
+            guard !response.accessToken.isEmpty else { throw NativeError.server("فعّل التسجيل التلقائي للبريد في إعدادات Supabase.") }
+            accessToken = response.accessToken
+            UserDefaults.standard.set(response.accessToken, forKey: accessTokenKey)
+            UserDefaults.standard.set(response.user.id, forKey: "coaster.native.userId")
+            try await NativeStudentService(client: client, accessToken: response.accessToken).redeem(code: code)
+            profile = try await client.profile(userId: response.user.id, accessToken: response.accessToken)
+        } catch { errorMessage = error.localizedDescription }
+    }
+
     func signOut() {
         accessToken = nil; profile = nil; location.stop()
         UserDefaults.standard.removeObject(forKey: accessTokenKey)
@@ -174,22 +198,34 @@ struct RootView: View {
 
 struct LoginView: View {
     @EnvironmentObject private var state: AppState
+    @State private var register = false
+    @State private var name = ""
     @State private var phone = ""
     @State private var password = ""
+    @State private var code = ""
     var body: some View {
         ScrollView {
             VStack(spacing: 22) {
                 Text("كوستر الجامعة").font(.system(size: 36, weight: .bold, design: .rounded))
                 Text("دهوك ⟷ الموصل · احجز مقعدك بسهولة").foregroundStyle(.secondary)
                 VStack(alignment: .trailing, spacing: 14) {
-                    Text("تسجيل الدخول").font(.title2.bold())
+                    Text(register ? "حساب جديد" : "تسجيل الدخول").font(.title2.bold())
+                    if register {
+                        Text("الاسم الكامل")
+                        TextField("مثال: أحمد محمد", text: $name).textContentType(.name).textFieldStyle(.roundedBorder)
+                    }
                     Text("رقم الهاتف")
                     TextField("07XXXXXXXXX", text: $phone).textContentType(.telephoneNumber).keyboardType(.phonePad).textFieldStyle(.roundedBorder).multilineTextAlignment(.leading)
                     Text("كلمة المرور")
-                    SecureField("••••••", text: $password).textFieldStyle(.roundedBorder)
-                    Button { Task { await state.signIn(phone: phone, password: password) } } label: {
-                        Text(state.isBusy ? "جارٍ التنفيذ…" : "دخول").frame(maxWidth: .infinity).padding().background(Color.green).foregroundStyle(.white).clipShape(RoundedRectangle(cornerRadius: 12))
-                    }.disabled(state.isBusy || phone.isEmpty || password.isEmpty)
+                    SecureField("••••••", text: $password).textContentType(register ? .newPassword : .password).textFieldStyle(.roundedBorder)
+                    if register {
+                        Text("رمز الاشتراك")
+                        TextField("BUS-XXXX", text: $code).textFieldStyle(.roundedBorder).multilineTextAlignment(.leading)
+                    }
+                    Button { Task { if register { await state.signUp(name: name, phone: phone, password: password, code: code) } else { await state.signIn(phone: phone, password: password) } } } label: {
+                        Text(state.isBusy ? "جارٍ التنفيذ…" : register ? "إنشاء الحساب" : "دخول").frame(maxWidth: .infinity).padding().background(Color.green).foregroundStyle(.white).clipShape(RoundedRectangle(cornerRadius: 12))
+                    }.disabled(state.isBusy || phone.isEmpty || password.count < 6 || (register && (name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)))
+                    Button(register ? "عندي حساب" : "ليس لدي حساب") { register.toggle() }.buttonStyle(.borderless)
                 }.padding(22).background(.thinMaterial).clipShape(RoundedRectangle(cornerRadius: 20))
             }.padding(24).frame(maxWidth: 520)
         }.background(Color(uiColor: .systemBackground)).environment(\.layoutDirection, .rightToLeft)
