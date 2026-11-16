@@ -9,6 +9,7 @@ const insights = readFileSync(new URL('App/NativeInsights.swift', project), 'utf
 const chat = readFileSync(new URL('App/NativeChat.swift', project), 'utf8');
 const admin = readFileSync(new URL('App/NativeAdmin.swift', project), 'utf8');
 const security = readFileSync(new URL('App/NativeSecurity.swift', project), 'utf8');
+const osm = readFileSync(new URL('App/NativeOSMMap.swift', project), 'utf8');
 const app = readFileSync(new URL('App/CoasterApp.swift', project), 'utf8');
 const pbx = readFileSync(new URL('App.xcodeproj/project.pbxproj', project), 'utf8');
 const plist = readFileSync(new URL('App/Info.plist', project), 'utf8');
@@ -28,7 +29,7 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(student, /get_seats/);
   assert.match(student, /setWeeklyDefault/);
   assert.match(student, /جدولي الثابت/);
-  assert.match(student, /Map\(/);
+  assert.match(student, /NativeOSMMapView/);
   assert.match(insights, /NativeInsightsView/);
   assert.match(insights, /get_road_pulse/);
   assert.match(insights, /NativeArrivalReminderView/);
@@ -44,6 +45,9 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(security, /SecItemAdd/);
   assert.match(security, /requestAuthorization/);
   assert.match(security, /didRegisterForRemoteNotificationsWithDeviceToken/);
+  assert.match(osm, /tile\.openstreetmap\.org/);
+  assert.match(osm, /OpenStreetMap contributors/);
+  assert.doesNotMatch(student, /Map\(/);
   assert.doesNotMatch(native, /set\(response\.accessToken, forKey: accessTokenKey\)/);
   assert.doesNotMatch(native, /coaster\.native\.userId/);
   assert.doesNotMatch(native, /WKWebView|Capacitor/);
@@ -57,6 +61,7 @@ test('ios_target_does_not_compile_or_link_capacitor_webview_sources', () => {
   assert.match(pbx, /NativeChat\.swift in Sources/);
   assert.match(pbx, /NativeAdmin\.swift in Sources/);
   assert.match(pbx, /NativeSecurity\.swift in Sources/);
+  assert.match(pbx, /NativeOSMMap\.swift in Sources/);
   assert.doesNotMatch(pbx, /CapApp-SPM|Capacitor|capacitor\.config|public in Resources/);
   assert.equal(existsSync(new URL('CapApp-SPM/', project)), false);
 });
