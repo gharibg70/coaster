@@ -245,6 +245,7 @@ struct StudentHomeView: View {
             mapView.tabItem { Label("الكوستر", systemImage: "location.fill") }.tag(1)
             announcementsView.tabItem { Label("التنبيهات", systemImage: "bell.fill") }.tag(2)
             historyView.tabItem { Label("السجل", systemImage: "clock.fill") }.tag(3)
+            NativeInsightsView(model: model).tabItem { Label("الطريق", systemImage: "chart.line.uptrend.xyaxis") }.tag(4)
         }
         .environment(\.layoutDirection, .rightToLeft)
         .task { await model.load() }
@@ -270,6 +271,7 @@ struct StudentHomeView: View {
                             bookingButton("لا أداوم", subtitle: "لا حجز لأي رحلة", outbound: false, returnTrip: false, data: data)
                         }
                         weeklyDefaultsCard(data.weeklyDefaults)
+                        NativeArrivalReminderView(model: model)
                         Text("رقم المسار: \(subscription.routeId)").font(.caption).foregroundStyle(.secondary)
                     }
                     Button("تسجيل الخروج", role: .destructive) { state.signOut() }
