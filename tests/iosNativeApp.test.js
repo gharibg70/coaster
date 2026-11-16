@@ -45,6 +45,12 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(security, /SecItemAdd/);
   assert.match(security, /requestAuthorization/);
   assert.match(security, /didRegisterForRemoteNotificationsWithDeviceToken/);
+  assert.match(native, /upsertAPNSDevice/);
+  assert.match(native, /updateBusLocation/);
+  assert.match(native, /push_devices/);
+  assert.match(admin, /admin_renew_subscription/);
+  assert.match(admin, /admin_set_seat_capacity/);
+  assert.match(admin, /admin_set_destination/);
   assert.match(osm, /tile\.openstreetmap\.org/);
   assert.match(osm, /OpenStreetMap contributors/);
   assert.doesNotMatch(student, /Map\(/);

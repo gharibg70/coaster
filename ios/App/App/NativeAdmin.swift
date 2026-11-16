@@ -19,7 +19,7 @@ struct NativeAdminAttendance: Decodable, Identifiable {
 }
 
 struct NativeAdminSubscription: Decodable, Identifiable {
-    let id: Int
+    let id: String
     let status: String
     let userId: String
     let endDate: String?
@@ -50,8 +50,11 @@ struct NativeAdminService {
     let decoder = JSONDecoder()
     func attendance(date: String) async throws -> [NativeAdminAttendance] { try await list("/rest/v1/daily_attendance?attendance_date=eq.\(date)&select=user_id,outbound,return_trip,profiles(full_name,phone,group_type)") }
     func subscriptions() async throws -> [NativeAdminSubscription] { try await list("/rest/v1/subscriptions?select=id,status,user_id,end_date,profiles(full_name,phone,group_type)&order=created_at.desc&limit=100") }
-    func updateSubscription(id: Int, status: String) async throws { _ = try await raw("/rest/v1/subscriptions?id=eq.\(id)", method: "PATCH", body: ["status": status]) }
-    func updateEndDate(id: Int, date: String) async throws { _ = try await raw("/rest/v1/subscriptions?id=eq.\(id)", method: "PATCH", body: ["end_date": date]) }
+    func updateSubscription(id: String, status: String) async throws { _ = try await rpc("admin_set_subscription_status", body: ["p_subscription_id": id, "p_status": status]) }
+    func updateEndDate(id: String, date: String) async throws { _ = try await raw("/rest/v1/subscriptions?id=eq.\(id)", method: "PATCH", body: ["end_date": date]) }
+    func renewSubscription(id: String, days: Int = 30) async throws { _ = try await rpc("admin_renew_subscription", body: ["p_subscription_id": id, "p_days": days]) }
+    func setSeatCapacity(_ capacity: Int) async throws { _ = try await rpc("admin_set_seat_capacity", body: ["p_capacity": capacity]) }
+    func setDestination(direction: String, lat: Double, lng: Double, radius: Int) async throws { _ = try await rpc("admin_set_destination", body: ["p_direction": direction, "p_lat": lat, "p_lng": lng, "p_radius_meters": radius]) }
     func resetPassword(userId: String, password: String) async throws { _ = try await rpc("admin_reset_password", body: ["p_user_id": userId, "p_new_password": password]) }
     func createCodes(group: String, count: Int) async throws -> [String] { let data = try await rpc("admin_create_codes", body: ["p_group": group, "p_count": count]); if let rows = try? decoder.decode([[String: String]].self, from: data) { return rows.compactMap { $0["new_code"] } }; return [] }
     func reports(room: String) async throws -> [NativeChatReport] { try await rpcDecode("admin_list_student_chat_reports", body: ["p_room": room, "p_limit": 100]) }

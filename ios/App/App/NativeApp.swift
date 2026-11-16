@@ -36,7 +36,7 @@ struct NativeSupabaseClient {
     let anonKey: String
     let decoder = JSONDecoder()
 
-    func request(path: String, method: String = "GET", body: Data? = nil, accessToken: String? = nil) async throws -> (Data, HTTPURLResponse) {
+    func request(path: String, method: String = "GET", body: Data? = nil, accessToken: String? = nil, prefer: String? = nil) async throws -> (Data, HTTPURLResponse) {
         guard let url = URL(string: baseURL.absoluteString + path) else { throw NativeError.invalidConfiguration }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -44,6 +44,7 @@ struct NativeSupabaseClient {
         request.setValue(anonKey, forHTTPHeaderField: "apikey")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         if let accessToken { request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization") }
+        if let prefer { request.setValue(prefer, forHTTPHeaderField: "Prefer") }
         if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
         request.httpBody = body
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -75,6 +76,26 @@ struct NativeSupabaseClient {
         let profiles = try decoder.decode([NativeProfile].self, from: data)
         guard let profile = profiles.first else { throw NativeError.server("لم يتم العثور على الملف الشخصي") }
         return profile
+    }
+
+    func upsertAPNSDevice(token: String, userId: String, accessToken: String) async throws {
+        let body: [String: Any] = ["user_id": userId, "platform": "ios", "token": token, "bundle_id": "com.gharibg70.coaster", "environment": "production"]
+        let data = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await request(path: "/rest/v1/push_devices?on_conflict=token", method: "POST", body: data, accessToken: accessToken, prefer: "resolution=merge-duplicates,return=minimal")
+        guard (200..<300).contains(response.statusCode) else { throw NativeError.server("تعذر تسجيل إشعارات الجهاز") }
+    }
+
+    func updateBusLocation(_ location: CLLocation, sharing: Bool, accessToken: String) async throws {
+        let body: [String: Any] = ["lat": location.coordinate.latitude, "lng": location.coordinate.longitude, "accuracy": location.horizontalAccuracy, "heading": location.course >= 0 ? location.course : NSNull(), "speed": location.speed >= 0 ? location.speed : NSNull(), "is_sharing": sharing, "updated_at": ISO8601DateFormatter().string(from: Date())]
+        let data = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await request(path: "/rest/v1/bus_location?id=eq.1", method: "PATCH", body: data, accessToken: accessToken, prefer: "return=minimal")
+        guard (200..<300).contains(response.statusCode) else { throw NativeError.server("تعذر تحديث موقع الحافلة") }
+    }
+
+    func setBusSharing(_ sharing: Bool, accessToken: String) async throws {
+        let body = try JSONSerialization.data(withJSONObject: ["is_sharing": sharing, "updated_at": ISO8601DateFormatter().string(from: Date())])
+        let (_, response) = try await request(path: "/rest/v1/bus_location?id=eq.1", method: "PATCH", body: body, accessToken: accessToken, prefer: "return=minimal")
+        guard (200..<300).contains(response.statusCode) else { throw NativeError.server("تعذر تحديث حالة مشاركة الموقع") }
     }
 
     private func message(from data: Data) -> String? {
@@ -129,6 +150,13 @@ final class AppState: ObservableObject {
             client = NativeSupabaseClient(baseURL: url, anonKey: key)
         } else { client = nil }
         accessToken = NativeKeychain.shared.get(accessTokenKey)
+        location.onLocation = { [weak self] location in
+            Task { @MainActor in await self?.sendBusLocation(location) }
+        }
+        NotificationCenter.default.addObserver(forName: .nativeAPNSTokenReceived, object: nil, queue: .main) { [weak self] note in
+            guard let token = note.object as? String else { return }
+            Task { @MainActor in await self?.registerPushToken(token) }
+        }
         Task { await restoreSession() }
     }
 
@@ -183,17 +211,32 @@ final class AppState: ObservableObject {
         if !notificationsEnabled { errorMessage = "لم يتم منح إذن الإشعارات. يمكنك تفعيله من إعدادات iPhone." }
     }
 
+    private func registerPushToken(_ token: String) async {
+        guard let client, let accessToken, let userId = NativeKeychain.shared.get(userIdKey) else { return }
+        try? await client.upsertAPNSDevice(token: token, userId: userId, accessToken: accessToken)
+    }
+
+    private func sendBusLocation(_ location: CLLocation) async {
+        guard locationSharing, let client, let accessToken else { return }
+        try? await client.updateBusLocation(location, sharing: true, accessToken: accessToken)
+    }
+
     func toggleLocation() {
-        if locationSharing { location.stop(); locationSharing = false }
-        else { location.start(); locationSharing = true }
+        if locationSharing {
+            location.stop(); locationSharing = false
+            if let client, let accessToken { Task { try? await client.setBusSharing(false, accessToken: accessToken) } }
+        } else { locationSharing = true; location.start() }
     }
 }
 
 final class NativeLocationManager: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
-    override init() { super.init(); manager.delegate = self; manager.desiredAccuracy = kCLLocationAccuracyBest }
+    var onLocation: ((CLLocation) -> Void)?
+    private var lastSentAt = Date.distantPast
+    override init() { super.init(); manager.delegate = self; manager.desiredAccuracy = kCLLocationAccuracyBest; manager.distanceFilter = 10 }
     func start() { manager.requestWhenInUseAuthorization(); manager.startUpdatingLocation() }
     func stop() { manager.stopUpdatingLocation() }
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) { guard let location = locations.last, location.horizontalAccuracy >= 0, Date().timeIntervalSince(lastSentAt) >= 3 else { return }; lastSentAt = Date(); onLocation?(location) }
 }
 
 struct RootView: View {
