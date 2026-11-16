@@ -102,8 +102,10 @@ final class AppState: ObservableObject {
     @Published var isBusy = false
     @Published var errorMessage: String?
     @Published var locationSharing = false
+    @Published var notificationsEnabled = false
     let client: NativeSupabaseClient?
-    private let accessTokenKey = "coaster.native.accessToken"
+    private let accessTokenKey = "accessToken"
+    private let refreshTokenKey = "refreshToken"
     private var accessToken: String?
     let location = NativeLocationManager()
     var nativeStudentService: NativeStudentService? {
@@ -125,7 +127,7 @@ final class AppState: ObservableObject {
            !urlString.isEmpty, !key.isEmpty, let url = URL(string: urlString) {
             client = NativeSupabaseClient(baseURL: url, anonKey: key)
         } else { client = nil }
-        accessToken = UserDefaults.standard.string(forKey: accessTokenKey)
+        accessToken = NativeKeychain.shared.get(accessTokenKey)
         Task { await restoreSession() }
     }
 
@@ -145,7 +147,8 @@ final class AppState: ObservableObject {
             guard let client else { throw NativeError.invalidConfiguration }
             let response = try await client.signIn(phone: phone, password: password)
             accessToken = response.accessToken
-            UserDefaults.standard.set(response.accessToken, forKey: accessTokenKey)
+            NativeKeychain.shared.set(response.accessToken, key: accessTokenKey)
+            if let refreshToken = response.refreshToken { NativeKeychain.shared.set(refreshToken, key: refreshTokenKey) }
             UserDefaults.standard.set(response.user.id, forKey: "coaster.native.userId")
             profile = try await client.profile(userId: response.user.id, accessToken: response.accessToken)
         } catch { errorMessage = error.localizedDescription }
@@ -159,7 +162,8 @@ final class AppState: ObservableObject {
             let response = try await client.signUp(name: name, phone: phone, password: password)
             guard !response.accessToken.isEmpty else { throw NativeError.server("فعّل التسجيل التلقائي للبريد في إعدادات Supabase.") }
             accessToken = response.accessToken
-            UserDefaults.standard.set(response.accessToken, forKey: accessTokenKey)
+            NativeKeychain.shared.set(response.accessToken, key: accessTokenKey)
+            if let refreshToken = response.refreshToken { NativeKeychain.shared.set(refreshToken, key: refreshTokenKey) }
             UserDefaults.standard.set(response.user.id, forKey: "coaster.native.userId")
             try await NativeStudentService(client: client, accessToken: response.accessToken).redeem(code: code)
             profile = try await client.profile(userId: response.user.id, accessToken: response.accessToken)
@@ -168,8 +172,14 @@ final class AppState: ObservableObject {
 
     func signOut() {
         accessToken = nil; profile = nil; location.stop()
-        UserDefaults.standard.removeObject(forKey: accessTokenKey)
+        NativeKeychain.shared.remove(accessTokenKey)
+        NativeKeychain.shared.remove(refreshTokenKey)
         UserDefaults.standard.removeObject(forKey: "coaster.native.userId")
+    }
+
+    func enableNotifications() async {
+        notificationsEnabled = await NativeAppDelegate.shared?.requestNotifications() ?? false
+        if !notificationsEnabled { errorMessage = "لم يتم منح إذن الإشعارات. يمكنك تفعيله من إعدادات iPhone." }
     }
 
     func toggleLocation() {

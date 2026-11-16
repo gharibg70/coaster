@@ -279,6 +279,7 @@ struct StudentHomeView: View {
                         Text("رقم المسار: \(subscription.routeId)").font(.caption).foregroundStyle(.secondary)
                     }
                     Button("تسجيل الخروج", role: .destructive) { state.signOut() }
+                    Button { Task { await state.enableNotifications() } } label: { Label("تفعيل إشعارات الرحلات", systemImage: "bell.badge") }
                 }.padding()
             }.navigationTitle("كوستر الجامعة").toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button { Task { await model.load() } } label: { Image(systemName: "arrow.clockwise") } } }
         }.navigationViewStyle(.stack)
