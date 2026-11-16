@@ -158,7 +158,7 @@ struct NativeStudentService {
         try await raw(path: "/rest/v1/rpc/\(name)", method: "POST", body: body)
     }
 
-    private func raw(path: String, method: String = "GET", body: Any? = nil) async throws -> Data {
+    func raw(path: String, method: String = "GET", body: Any? = nil) async throws -> Data {
         let bodyData = body.flatMap { try? JSONSerialization.data(withJSONObject: $0) }
         let (data, response) = try await client.request(path: path, method: method, body: bodyData, accessToken: accessToken)
         guard (200..<300).contains(response.statusCode) else { throw NativeError.server("تعذر تحميل بيانات الطالب (\(response.statusCode))") }
