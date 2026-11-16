@@ -1,0 +1,126 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'public/**'
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - '.github/workflows/ios-ipa.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-ipa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ipa:
+    name: Build unsigned device IPA
+    runs-on: macos-26
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Verify Xcode version
+        shell: bash
+        run: |
+          xcodebuild -version
+          XCODE_VERSION=$(xcodebuild -version | awk '/^Xcode / { print $2; exit }')
+          XCODE_MAJOR=${XCODE_VERSION%%.*}
+          if [ "$XCODE_MAJOR" -lt 26 ]; then
+            echo "Xcode 26.0 or newer is required; found $XCODE_VERSION on runner $RUNNER_OS." >&2
+            exit 1
+          fi
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Check browser bundle for server secrets
+        run: npm run check:client-secrets
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build web assets and sync Capacitor iOS project
+        run: npm run sync:ios
+        env:
+          VITE_SUPABASE_URL: https://bjrpmuwzbcaebhepakdb.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_pPGzlX06HCMy1zTDd5XXnA_xpWE5b4y
+
+      - name: Scan built web assets for server secrets
+        run: npm run check:client-secrets
+
+      - name: Build unsigned iPhone device app
+        shell: bash
+        run: |
+          rm -rf ios/DerivedData
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+          test -d ios/DerivedData/Build/Products/Debug-iphoneos/App.app
+
+      - name: Package Payload/App.app as unsigned IPA
+        shell: bash
+        run: |
+          rm -rf ios/ipa-staging coaster-ios-unsigned.ipa
+          mkdir -p ios/ipa-staging/Payload
+          cp -R ios/DerivedData/Build/Products/Debug-iphoneos/App.app ios/ipa-staging/Payload/App.app
+          (cd ios/ipa-staging && zip -qry ../../coaster-ios-unsigned.ipa Payload)
+          test -s coaster-ios-unsigned.ipa
+
+      - name: Verify IPA identity, permissions, and archive safety
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import plistlib, zipfile
+          with zipfile.ZipFile('coaster-ios-unsigned.ipa') as z:
+              names = z.namelist()
+              assert any(n.startswith('Payload/') and n.endswith('.app/Info.plist') for n in names)
+              assert not any(n.endswith('.mobileprovision') for n in names)
+              info = next(n for n in names if n.startswith('Payload/') and n.endswith('.app/Info.plist'))
+              plist = plistlib.loads(z.read(info))
+          assert plist['CFBundleIdentifier'] == 'com.gharibg70.coaster'
+          assert plist['CFBundleDisplayName'] == 'كوستر الجامعة'
+          assert float(plist.get('MinimumOSVersion', '0')) >= 15.0
+          assert plist['NSLocationWhenInUseUsageDescription'] == 'يستخدم كوستر الجامعة موقعك أثناء مشاركة المشرف لموقع الحافلة لعرضها للطلاب.'
+          assert 'NSLocationAlwaysAndWhenInUseUsageDescription' not in plist
+          assert 'NSLocationAlwaysUsageDescription' not in plist
+          assert 'UIBackgroundModes' not in plist
+          print('IPA identity and foreground-only location checks passed.')
+          PY
+          unzip -tq coaster-ios-unsigned.ipa
+
+      - name: Scan unsigned IPA for server secrets and Apple signing material
+        run: npm run check:ios-ipa -- coaster-ios-unsigned.ipa
+
+      - name: Upload unsigned IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coaster-ios-unsigned-ipa
+          path: coaster-ios-unsigned.ipa
+          retention-days: 14
+          if-no-files-found: error
