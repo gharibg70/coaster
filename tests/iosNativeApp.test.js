@@ -19,6 +19,8 @@ test('ios_target_has_a_swiftui_entrypoint_and_native_services', () => {
   assert.match(student, /struct NativeBusMapView: View/);
   assert.match(student, /set_my_attendance/);
   assert.match(student, /get_seats/);
+  assert.match(student, /setWeeklyDefault/);
+  assert.match(student, /جدولي الثابت/);
   assert.match(student, /Map\(/);
   assert.doesNotMatch(native, /WKWebView|Capacitor/);
 });

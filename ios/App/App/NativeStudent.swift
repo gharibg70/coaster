@@ -59,6 +59,18 @@ struct NativeHistory: Codable, Identifiable {
     var id: String { attendanceDate }
 }
 
+struct NativeWeeklyDefault: Codable, Identifiable {
+    let weekday: Int
+    let outbound: Bool
+    let returnTrip: Bool
+    var id: Int { weekday }
+    enum CodingKeys: String, CodingKey {
+        case weekday, outbound
+        case returnTrip = "return_trip"
+    }
+    var value: String { "\(outbound ? "t" : "f")\(returnTrip ? "t" : "f")" }
+}
+
 struct NativeBusLocation: Codable {
     let lat: Double?
     let lng: Double?
@@ -82,6 +94,7 @@ struct NativeStudentData {
     let announcements: [NativeAnnouncement]
     let history: [NativeHistory]
     let seats: NativeSeats?
+    let weeklyDefaults: [NativeWeeklyDefault]
 }
 
 struct NativeStudentService {
@@ -93,13 +106,14 @@ struct NativeStudentService {
     func load(profileId: String) async throws -> NativeStudentData {
         let date = serviceDate(offset: 1)
         let subscription = try await first(NativeSubscription.self, path: "/rest/v1/subscriptions?user_id=eq.\(profileId)&select=route_id,status,end_date&limit=1")
-        guard let subscription else { return NativeStudentData(subscription: nil, date: date, attendance: nil, announcements: [], history: [], seats: nil) }
+        guard let subscription else { return NativeStudentData(subscription: nil, date: date, attendance: nil, announcements: [], history: [], seats: nil, weeklyDefaults: []) }
         _ = try? await rpcEmpty("apply_defaults", body: ["p_date": date])
         async let attendance = first(NativeAttendance.self, path: "/rest/v1/daily_attendance?user_id=eq.\(profileId)&attendance_date=eq.\(date)&select=outbound,return_trip,auto&limit=1")
         async let announcements = list(NativeAnnouncement.self, path: "/rest/v1/announcements?is_active=eq.true&select=id,title,message,created_at&order=created_at.desc&limit=30")
         async let history = list(NativeHistory.self, path: "/rest/v1/daily_attendance?user_id=eq.\(profileId)&select=attendance_date,outbound,return_trip&order=attendance_date.desc&limit=14")
+        async let weeklyDefaults = list(NativeWeeklyDefault.self, path: "/rest/v1/weekly_defaults?user_id=eq.\(profileId)&select=weekday,outbound,return_trip&order=weekday.asc")
         async let seats = first(NativeSeats.self, path: "/rest/v1/rpc/get_seats", method: "POST", body: ["p_route_id": subscription.routeId, "p_date": date])
-        return NativeStudentData(subscription: subscription, date: date, attendance: try await attendance, announcements: try await announcements, history: try await history, seats: try await seats)
+        return NativeStudentData(subscription: subscription, date: date, attendance: try await attendance, announcements: try await announcements, history: try await history, seats: try await seats, weeklyDefaults: try await weeklyDefaults)
     }
 
     func setAttendance(routeId: Int, date: String, outbound: Bool, returnTrip: Bool) async throws {
@@ -108,6 +122,20 @@ struct NativeStudentService {
 
     func redeem(code: String) async throws {
         _ = try await rpcEmpty("redeem_subscription_code", body: ["p_code": code])
+    }
+
+    func setWeeklyDefault(userId: String, weekday: Int, value: String) async throws {
+        if value.isEmpty {
+            _ = try await raw(path: "/rest/v1/weekly_defaults?user_id=eq.\(userId)&weekday=eq.\(weekday)", method: "DELETE")
+        } else {
+            let body: [String: Any] = [
+                "user_id": userId,
+                "weekday": weekday,
+                "outbound": value.first == "t",
+                "return_trip": value.last == "t"
+            ]
+            _ = try await raw(path: "/rest/v1/weekly_defaults", method: "POST", body: body)
+        }
     }
 
     func busLocation() async throws -> NativeBusLocation? {
@@ -191,6 +219,15 @@ final class NativeStudentViewModel: ObservableObject {
         catch { self.error = errorMessage(error) }
     }
 
+    func setWeeklyDefault(weekday: Int, value: String) async {
+        isBusy = true; defer { isBusy = false }
+        do {
+            try await service.setWeeklyDefault(userId: profileId, weekday: weekday, value: value)
+            message = "تم حفظ الجدول الثابت"
+            await load()
+        } catch { self.error = errorMessage(error) }
+    }
+
     private func errorMessage(_ error: Error) -> String { (error as? LocalizedError)?.errorDescription ?? "تعذر الاتصال بالخدمة." }
 }
 
@@ -232,6 +269,7 @@ struct StudentHomeView: View {
                             bookingButton("أرجع فقط", subtitle: "الموصل إلى دهوك", outbound: false, returnTrip: true, data: data)
                             bookingButton("لا أداوم", subtitle: "لا حجز لأي رحلة", outbound: false, returnTrip: false, data: data)
                         }
+                        weeklyDefaultsCard(data.weeklyDefaults)
                         Text("رقم المسار: \(subscription.routeId)").font(.caption).foregroundStyle(.secondary)
                     }
                     Button("تسجيل الخروج", role: .destructive) { state.signOut() }
@@ -249,6 +287,26 @@ struct StudentHomeView: View {
 
     private func seatRow(_ title: String, free: Int, capacity: Int) -> some View {
         VStack(alignment: .trailing) { HStack { Text("\(max(0, free)) مقعد").foregroundStyle(free > capacity / 2 ? .green : .orange); Spacer(); Text(title) }; ProgressView(value: Double(max(0, free)), total: Double(max(1, capacity))) }
+    }
+
+    private func weeklyDefaultsCard(_ defaults: [NativeWeeklyDefault]) -> some View {
+        let names = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"]
+        return NativeCard(title: "جدولي الثابت") {
+            Text("يتم تأكيد دوامك تلقائياً حسب هذا الجدول.").font(.caption).foregroundStyle(.secondary)
+            ForEach(0..<names.count, id: \.self) { day in
+                let current = defaults.first(where: { $0.weekday == day })?.value ?? ""
+                HStack {
+                    Picker(names[day], selection: Binding(get: { current }, set: { value in Task { await model.setWeeklyDefault(weekday: day, value: value) } })) {
+                        Text("بدون").tag("")
+                        Text("أذهب وأرجع").tag("tt")
+                        Text("أذهب فقط").tag("tf")
+                        Text("أرجع فقط").tag("ft")
+                    }.pickerStyle(.menu)
+                    Spacer()
+                    Text(names[day])
+                }
+            }
+        }
     }
 
     private func bookingButton(_ title: String, subtitle: String, outbound: Bool, returnTrip: Bool, data: NativeStudentData) -> some View {
