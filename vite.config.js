@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   // The new public Pages site is hosted at https://gharibg70.github.io/coaster-react-vite/.
-  base: process.env.GITHUB_ACTIONS ? '/coaster-react-vite/' : '/',
+  base: mode === 'android' ? './' : process.env.GITHUB_ACTIONS ? '/coaster-react-vite/' : '/',
   build: {
     rollupOptions: {
       output: {
@@ -16,4 +16,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

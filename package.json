@@ -6,16 +6,27 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "check:client-secrets": "node scripts/check-client-secrets.mjs",
+    "check:android-apk": "node scripts/check-android-apk.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test tests/*.test.js",
+    "build:android": "vite build --mode android",
+    "sync:android": "npm run build:android && cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.2",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/geolocation": "8.2.4",
     "@supabase/supabase-js": "^2.45.4",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.2",
+    "@electric-sql/pglite": "^0.5.16",
     "@vitejs/plugin-react": "^4.3.1",
     "vite": "^5.4.8"
-  }
+  },
+  "packageManager": "npm@10.9.9"
 }

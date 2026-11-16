@@ -1,0 +1,8 @@
+{
+  "appId": "com.gharibg70.coaster",
+  "appName": "كوستر الجامعة",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}
