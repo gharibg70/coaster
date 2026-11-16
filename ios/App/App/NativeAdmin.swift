@@ -29,7 +29,7 @@ struct NativeAdminSubscription: Decodable, Identifiable {
     enum CodingKeys: String, CodingKey { case id, status, userId = "user_id", endDate = "end_date", profile = "profiles" }
     enum ProfileKeys: String, CodingKey { case fullName = "full_name", phone, groupType = "group_type" }
     init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self); id = try c.decode(Int.self, forKey: .id); status = try c.decode(String.self, forKey: .status); userId = try c.decode(String.self, forKey: .userId); endDate = try? c.decode(String.self, forKey: .endDate)
+        let c = try decoder.container(keyedBy: CodingKeys.self); id = try c.decode(String.self, forKey: .id); status = try c.decode(String.self, forKey: .status); userId = try c.decode(String.self, forKey: .userId); endDate = try? c.decode(String.self, forKey: .endDate)
         let p = try? c.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profile); fullName = try? p?.decode(String.self, forKey: .fullName); phone = try? p?.decode(String.self, forKey: .phone); groupType = try? p?.decode(String.self, forKey: .groupType)
     }
 }
