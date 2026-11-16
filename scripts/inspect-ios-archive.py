@@ -27,7 +27,8 @@ try:
             name = info.filename.replace('\\', '/')
             if name.startswith('/') or name == '..' or name.startswith('../') or '/..' in name.split('/'):
                 fail('unsafe archive path detected.')
-            if posixpath.normpath(name) != name or '\x00' in name or '..' in name.split('/'):
+            normalized_name = posixpath.normpath(name.rstrip('/')) + ('/' if name.endswith('/') else '')
+            if normalized_name != name or '\x00' in name or '..' in name.split('/'):
                 fail('unsafe archive path detected.')
             if info.file_size > MAX_UNCOMPRESSED:
                 fail('IPA entry-size limit exceeded.')
