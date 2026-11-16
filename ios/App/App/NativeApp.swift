@@ -114,6 +114,10 @@ final class AppState: ObservableObject {
         guard let client, let accessToken else { return nil }
         return NativeChatService(client: client, accessToken: accessToken)
     }
+    var nativeAdminService: NativeAdminService? {
+        guard let client, let accessToken else { return nil }
+        return NativeAdminService(client: client, accessToken: accessToken)
+    }
 
     init() {
         if let urlString = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String,
@@ -187,7 +191,7 @@ struct RootView: View {
         Group {
             if state.isLoading { ProgressView("جاري التحميل…") }
             else if let profile = state.profile {
-                if profile.role == "admin" { HomeView(profile: profile) }
+                if profile.role == "admin", let service = state.nativeAdminService { NativeAdminDashboard(service: service) }
                 else if let service = state.nativeStudentService { StudentHomeView(service: service, profileId: profile.id) }
                 else { LoginView() }
             }
