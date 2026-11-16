@@ -76,12 +76,12 @@ final class NativeAdminViewModel: ObservableObject {
     @Published var message: String?
     let service: NativeAdminService
     init(service: NativeAdminService) { self.service = service; date = NativeAdminViewModel.today(offset: 1) }
-    func loadAttendance() async { do { attendance = try await service.attendance(date: date) } catch { error = error.localizedDescription } }
-    func loadSubscriptions() async { do { subscriptions = try await service.subscriptions() } catch { error = error.localizedDescription } }
-    func loadReports(room: String) async { do { reports = try await service.reports(room: room) } catch { error = error.localizedDescription } }
-    func toggle(_ item: NativeAdminSubscription) async { busy = true; defer { busy = false }; do { try await service.updateSubscription(id: item.id, status: item.status == "active" ? "suspended" : "active"); message = "تم تحديث الاشتراك"; await loadSubscriptions() } catch { error = error.localizedDescription } }
-    func makeCodes(group: String, count: Int) async { busy = true; defer { busy = false }; do { codes = try await service.createCodes(group: group, count: count); message = "تم إنشاء الرموز" } catch { error = error.localizedDescription } }
-    func remove(report: NativeChatReport, room: String) async { do { try await service.deleteMessage(room: room, messageId: report.messageId); reports.removeAll { $0.id == report.id }; message = "تم حذف الرسالة" } catch { error = error.localizedDescription } }
+    func loadAttendance() async { do { attendance = try await service.attendance(date: date) } catch { self.error = error.localizedDescription } }
+    func loadSubscriptions() async { do { subscriptions = try await service.subscriptions() } catch { self.error = error.localizedDescription } }
+    func loadReports(room: String) async { do { reports = try await service.reports(room: room) } catch { self.error = error.localizedDescription } }
+    func toggle(_ item: NativeAdminSubscription) async { busy = true; defer { busy = false }; do { try await service.updateSubscription(id: item.id, status: item.status == "active" ? "suspended" : "active"); message = "تم تحديث الاشتراك"; await loadSubscriptions() } catch { self.error = error.localizedDescription } }
+    func makeCodes(group: String, count: Int) async { busy = true; defer { busy = false }; do { codes = try await service.createCodes(group: group, count: count); message = "تم إنشاء الرموز" } catch { self.error = error.localizedDescription } }
+    func remove(report: NativeChatReport, room: String) async { do { try await service.deleteMessage(room: room, messageId: report.messageId); reports.removeAll { $0.id == report.id }; message = "تم حذف الرسالة" } catch { self.error = error.localizedDescription } }
     static func today(offset: Int) -> String { let f = DateFormatter(); f.calendar = Calendar(identifier: .gregorian); f.timeZone = TimeZone(identifier: "Asia/Baghdad"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Calendar.current.date(byAdding: .day, value: offset, to: Date())!) }
 }
 
