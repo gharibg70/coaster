@@ -14,6 +14,7 @@
 			A10000090000000000000009 /* NativeChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000100000000000000010 /* NativeChat.swift */; };
 			A10000110000000000000011 /* NativeAdmin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000120000000000000012 /* NativeAdmin.swift */; };
 			A10000130000000000000013 /* NativeSecurity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000140000000000000014 /* NativeSecurity.swift */; };
+			A10000150000000000000015 /* NativeOSMMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000160000000000000016 /* NativeOSMMap.swift */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +26,7 @@
 			A10000100000000000000010 /* NativeChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeChat.swift; sourceTree = "<group>"; };
 			A10000120000000000000012 /* NativeAdmin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeAdmin.swift; sourceTree = "<group>"; };
 			A10000140000000000000014 /* NativeSecurity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSecurity.swift; sourceTree = "<group>"; };
+			A10000160000000000000016 /* NativeOSMMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeOSMMap.swift; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 				A10000100000000000000010 /* NativeChat.swift */,
 				A10000120000000000000012 /* NativeAdmin.swift */,
 				A10000140000000000000014 /* NativeSecurity.swift */,
+				A10000160000000000000016 /* NativeOSMMap.swift */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3131FED79650016851F /* Info.plist */,
 			);
@@ -152,6 +155,7 @@
 				A10000090000000000000009 /* NativeChat.swift in Sources */,
 				A10000110000000000000011 /* NativeAdmin.swift in Sources */,
 				A10000130000000000000013 /* NativeSecurity.swift in Sources */,
+				A10000150000000000000015 /* NativeOSMMap.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

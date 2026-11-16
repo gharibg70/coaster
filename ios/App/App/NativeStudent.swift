@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-import MapKit
+import CoreLocation
 
 struct NativeSubscription: Codable {
     let routeId: Int
@@ -340,18 +340,14 @@ struct StudentHomeView: View {
 
 struct NativeBusMapView: View {
     @ObservedObject var model: NativeStudentViewModel
-    @State private var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 36.62, longitude: 43.05), span: MKCoordinateSpan(latitudeDelta: 1.4, longitudeDelta: 1.4))
     var body: some View {
         VStack(spacing: 0) {
-            Map(coordinateRegion: $region, annotationItems: model.busLocation?.coordinate.map { [NativeMapPin(coordinate: $0)] } ?? []) { pin in MapAnnotation(coordinate: pin.coordinate) { Image(systemName: "bus.fill").font(.title).foregroundColor(.green).padding(10).background(.regularMaterial).clipShape(Circle()) } }.frame(minHeight: 380)
+            NativeOSMMapView(coordinate: model.busLocation?.coordinate).frame(minHeight: 380)
             if let location = model.busLocation, let updated = location.updatedAt {
                 Text(location.isSharing == true ? "الموقع مباشر · آخر تحديث \(relativeTime(updated))" : "صاحب الكوستر لا يشارك موقعه حالياً.").frame(maxWidth: .infinity, alignment: .trailing).padding().foregroundStyle(location.isSharing == true ? .green : .secondary)
             } else { Text("جاري تحميل موقع الحافلة…").frame(maxWidth: .infinity, alignment: .trailing).padding() }
             Button("تحديث موقع الحافلة") { Task { await model.refreshBus() } }.padding(.bottom)
         }.task { await model.refreshBus() }
-        .onChange(of: model.busLocation?.lat) { _ in if let coordinate = model.busLocation?.coordinate { region = MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.08)) } }
     }
     private func relativeTime(_ value: String) -> String { value.replacingOccurrences(of: "T", with: " ").prefix(16).description }
 }
-
-struct NativeMapPin: Identifiable { let id = UUID(); let coordinate: CLLocationCoordinate2D }
