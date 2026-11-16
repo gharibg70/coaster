@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-struct NativeAdminAttendance: Codable, Identifiable {
+struct NativeAdminAttendance: Decodable, Identifiable {
     let userId: String
     let outbound: Bool
     let returnTrip: Bool
@@ -18,7 +18,7 @@ struct NativeAdminAttendance: Codable, Identifiable {
     }
 }
 
-struct NativeAdminSubscription: Codable, Identifiable {
+struct NativeAdminSubscription: Decodable, Identifiable {
     let id: Int
     let status: String
     let userId: String
