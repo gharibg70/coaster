@@ -1,20 +1,24 @@
-# إصدار iOS للاستخدام الشخصي عبر AltStore Classic
+# إصدار iOS أصلي للاستخدام الشخصي عبر SideStore أو AltStore Classic
 
-ينتج Workflow **Build iOS IPA** ملف `coaster-ios-unsigned.ipa` للاستخدام الشخصي. هذا ملف IPA تجريبي غير موقع بتوقيع توزيع Apple، ولا يثبت مباشرة بالنقر عليه مثل APK. لا يحتوي المشروع أو GitHub Actions على Apple ID أو كلمة مرور أو شهادة أو مفتاح خاص أو Provisioning Profile.
+نسخة iOS الحالية تطبيق أصلي بالكامل مبني بـ **SwiftUI**. لا تستخدم React أو Vite أو `WKWebView` أو Capacitor runtime داخل التطبيق. يتصل التطبيق بـ Supabase عبر `URLSession`، ويحفظ جلسة الدخول محلياً، ويستخدم `CoreLocation` للموقع أثناء مشاركة المشرف فقط.
 
-## الحصول على الملف
+## الحصول على IPA
 
 1. افتح مستودع [`gharibg70/coaster`](https://github.com/gharibg70/coaster) ثم تبويب **Actions**.
-2. شغّل **Build iOS IPA** يدوياً، أو انتظر تشغيله بعد تغيير ملفات التطبيق ذات الصلة على `main`.
-3. بعد نجاح التشغيل نزّل artifact باسم `coaster-ios-unsigned-ipa`. إذا نُزّل كملف ZIP من GitHub، فك ضغطه للحصول على `coaster-ios-unsigned.ipa`.
-4. استورد ملف IPA محلياً في AltStore Classic على iPhone، ليعيد AltStore/AltServer توقيعه محلياً باستخدام Apple ID الذي تدخله أنت على جهازك. لا ترسل كلمة المرور إلى المشروع أو GitHub Actions أو أي مساعد.
+2. شغّل **Build iOS IPA** يدوياً أو استخدم آخر تشغيل ناجح.
+3. نزّل artifact باسم `coaster-ios-unsigned-ipa`.
+4. فك ضغط artifact ثم استورد `coaster-ios-unsigned.ipa` في SideStore أو AltStore Classic.
 
-ثبّت AltStore عبر AltServer على macOS أو Windows، ووافق على الثقة بالمطور إذا طلب iOS ذلك. في iOS 16 فأحدث فعّل **Developer Mode**. يجب أن يبقى AltServer متاحاً عبر USB أو نفس شبكة Wi‑Fi عند تحديث التطبيقات.
+الـIPA غير موقع بتوقيع توزيع Apple. لا يحتوي المشروع أو GitHub Actions على Apple ID أو كلمة مرور أو شهادة أو مفتاح خاص أو Provisioning Profile.
 
-الحساب المجاني يحتاج عادةً إلى **Refresh كل 7 أيام**، وAltStore Classic يحد التطبيقات الجانبية النشطة إلى **3 تطبيقات**. لا يعمل هذا IPA على iPhone من دون AltStore أو مسار توقيع Apple صالح، ولا يعني نجاح الـWorkflow أن التثبيت على جهازك تم فعلياً.
+## SideStore وLiveContainer
 
-## حدود هذه النسخة
+عند تحديث التطبيق، احذف النسخة القديمة أولاً. إذا استُخدم LiveContainer فاحذف حاوية التطبيق أو بيانات WebView القديمة إن كان الخيار متاحاً، ثم أغلق LiveContainer تماماً قبل استيراد IPA الجديد. لا تختبر IPA قديماً وتستنتج منه نتيجة النسخة الجديدة؛ تحقّق من SHA-256 الذي يرافق كل artifact.
 
-يعمل التطبيق على iOS 15 فأحدث، ويحافظ على واجهة RTL العربية ومعرّف الحزمة `com.gharibg70.coaster`. يطلب إذن الموقع فقط عند تشغيل مشاركة المشرف لموقع الحافلة، ولا يطلب صلاحية موقع في الخلفية ولا يشارك الموقع في الخلفية.
+## الصلاحيات والحدود
 
-الإشعارات الأصلية في iOS غير مهيأة؛ فهي تحتاج APNs وإعداداً خادمياً مستقلاً. لذلك لا تتوقع Push native من نسخة iOS هذه. يبقى موقع الويب وإشعارات الويب ونسخة Android APK مسارات مستقلة.
+يعمل التطبيق على iOS 15 فأحدث، ويحافظ على الواجهة العربية RTL، ومعرّف الحزمة `com.gharibg70.coaster`. يطلب `NSLocationWhenInUseUsageDescription` فقط عند تشغيل مشاركة موقع الحافلة. لا توجد صلاحية موقع في الخلفية ولا `UIBackgroundModes`.
+
+الإشعارات الأصلية غير مهيأة لأنها تحتاج APNs وإعداداً خادمياً مستقلاً. موقع الويب ونسخة Android APK منفصلان ولا يتأثران بتحويل نسخة iOS إلى SwiftUI.
+
+الحساب المجاني يحتاج عادةً إلى **Refresh كل 7 أيام**، وAltStore Classic يحد التطبيقات الجانبية النشطة إلى **3 تطبيقات**. في iOS 16 فأحدث فعّل **Developer Mode**. لا ترسل كلمة مرور Apple ID إلى المستودع أو GitHub Actions أو أي مساعد.
