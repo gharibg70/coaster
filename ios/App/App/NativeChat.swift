@@ -76,7 +76,7 @@ final class NativeChatViewModel: ObservableObject {
     func start() async {
         guard room == "boys" || room == "girls" else { allowed = false; loading = false; status = "مجموعة الدردشة غير صالحة."; return }
         do { allowed = try await service.access(room: room); if allowed { await reload() } else { loading = false; status = "ليس لديك صلاحية لعرض غرفة الدردشة هذه." } }
-        catch { loading = false; error = error.localizedDescription; status = "تعذر التحقق من صلاحية الدردشة." }
+        catch { loading = false; self.error = error.localizedDescription; status = "تعذر التحقق من صلاحية الدردشة." }
         timer = Task { [weak self] in
             while !Task.isCancelled { try? await Task.sleep(nanoseconds: 30_000_000_000); if Task.isCancelled { return }; await self?.reload() }
         }
@@ -85,19 +85,19 @@ final class NativeChatViewModel: ObservableObject {
     func reload() async {
         guard allowed else { return }
         do { messages = try await service.list(room: room); loading = false; status = "" }
-        catch { loading = false; error = error.localizedDescription }
+        catch { loading = false; self.error = error.localizedDescription }
     }
 
     func send() async {
         guard allowed else { return }
         busy = true; defer { busy = false }
         do { let message = try await service.send(room: room, body: draft); messages.append(message); messages = Array(messages.suffix(100)); draft = ""; status = "تم إرسال الرسالة." }
-        catch { error = error.localizedDescription }
+        catch { self.error = error.localizedDescription }
     }
 
     func report(_ message: NativeChatMessage, reason: String) async {
         do { try await service.report(room: room, messageId: message.id, reason: reason); status = "تم إرسال البلاغ للمراجعة." }
-        catch { error = error.localizedDescription }
+        catch { self.error = error.localizedDescription }
     }
 }
 
