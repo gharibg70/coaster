@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const supabaseSource = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8');
 
 test('capacitor_config_uses_approved_app_id_and_dist', () => {
   const configPath = new URL('../capacitor.config.json', import.meta.url);
@@ -30,6 +31,12 @@ test('android_build_script_generates_relative_asset_urls_without_changing_pages'
   });
   const pagesHtml = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
   assert.match(pagesHtml, /(?:src|href)="\/coaster-react-vite\/assets\//, 'Pages asset base must remain unchanged');
+});
+
+test('supabase_client_disables_redirect_session_detection_for_capacitor', () => {
+  assert.match(supabaseSource, /detectSessionInUrl:\s*false/);
+  assert.match(supabaseSource, /persistSession:\s*true/);
+  assert.match(supabaseSource, /autoRefreshToken:\s*true/);
 });
 
 test('android_manifest_requests_precise_and_approximate_location_only_in_foreground', () => {

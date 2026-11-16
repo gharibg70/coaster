@@ -37,8 +37,12 @@ export default function App() {
     if (!supabase) { setLoading(false); return; }
     let active = true;
     supabase.auth.getSession().then(async ({ data, error }) => {
-      if (error) reportError(error);
+      // An initial session probe may fail transiently in a native WebView. The
+      // anonymous login screen is still usable, so do not show that probe
+      // failure as if the user's login had failed.
       if (active && data.session) try { await route(data.session.user); } catch (e) { reportError(e); }
+      if (active) setLoading(false);
+    }).catch(() => {
       if (active) setLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
