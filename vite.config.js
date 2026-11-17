@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  // The new public Pages site is hosted at https://gharibg70.github.io/coaster-react-vite/.
-  base: mode === 'android' || mode === 'ios' ? './' : process.env.GITHUB_ACTIONS ? '/coaster-react-vite/' : '/',
+  // The public site uses a custom domain, so browser assets must resolve from the domain root.
+  base: mode === 'android' || mode === 'ios' ? './' : '/',
   build: {
     rollupOptions: {
       output: {

@@ -18,7 +18,7 @@ test('capacitor_config_uses_approved_app_id_and_dist', () => {
   assert.equal(config.webDir, 'dist');
 });
 
-test('android_build_script_generates_relative_asset_urls_without_changing_pages', () => {
+test('android_build_script_generates_relative_asset_urls_and_custom_pages_use_root_assets', () => {
   assert.equal(typeof packageJson.scripts['build:android'], 'string');
   execFileSync('npx', ['vite', 'build', '--mode', 'android'], { cwd: root, stdio: 'pipe' });
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
@@ -31,7 +31,8 @@ test('android_build_script_generates_relative_asset_urls_without_changing_pages'
     env: { ...process.env, GITHUB_ACTIONS: 'true' },
   });
   const pagesHtml = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
-  assert.match(pagesHtml, /(?:src|href)="\/coaster-react-vite\/assets\//, 'Pages asset base must remain unchanged');
+  assert.match(pagesHtml, /(?:src|href)="\/assets\//, 'Custom-domain Pages assets must use the domain root');
+  assert.doesNotMatch(pagesHtml, /(?:src|href)="\/coaster-react-vite\/assets\//, 'Pages must not use the legacy repository path');
 });
 
 test('supabase_client_disables_redirect_session_detection_for_capacitor', () => {
