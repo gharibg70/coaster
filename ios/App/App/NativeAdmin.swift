@@ -22,7 +22,7 @@ struct NativeChatReport: Codable, Identifiable {
     enum CodingKeys: String, CodingKey { case messageId = "message_id", displayName = "display_name", body, createdAt = "created_at", reportCount = "report_count" }
 }
 
-struct NativeDestination { let lat: Double; let lng: Double; let radius: Int }
+struct NativeAdminDestination { let lat: Double; let lng: Double; let radius: Int }
 
 struct NativeAdminService {
     let client: NativeSupabaseClient; let accessToken: String; let decoder = JSONDecoder()
@@ -33,7 +33,7 @@ struct NativeAdminService {
     func renewSubscription(id: String, days: Int = 30) async throws { _ = try await rpc("admin_renew_subscription", body: ["p_subscription_id": id, "p_days": days]) }
     func seatCapacity() async throws -> Int { let data = try await raw("/rest/v1/system_settings?key=eq.seat_capacity&select=value&limit=1"); let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]; return (rows?.first?["value"] as? NSNumber)?.intValue ?? 100 }
     func setSeatCapacity(_ capacity: Int) async throws { _ = try await rpc("admin_set_seat_capacity", body: ["p_capacity": capacity]) }
-    func destination(direction: String) async throws -> NativeDestination? { let key = direction == "outbound" ? "arrival_destination_outbound" : "arrival_destination_return"; let data = try await raw("/rest/v1/system_settings?key=eq.\(key)&select=value&limit=1"); guard let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]], let value = rows.first?["value"] as? [String: Any], let lat = (value["lat"] as? NSNumber)?.doubleValue, let lng = (value["lng"] as? NSNumber)?.doubleValue else { return nil }; return NativeDestination(lat: lat, lng: lng, radius: (value["radiusMeters"] as? NSNumber)?.intValue ?? 250) }
+    func destination(direction: String) async throws -> NativeAdminDestination? { let key = direction == "outbound" ? "arrival_destination_outbound" : "arrival_destination_return"; let data = try await raw("/rest/v1/system_settings?key=eq.\(key)&select=value&limit=1"); guard let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]], let value = rows.first?["value"] as? [String: Any], let lat = (value["lat"] as? NSNumber)?.doubleValue, let lng = (value["lng"] as? NSNumber)?.doubleValue else { return nil }; return NativeAdminDestination(lat: lat, lng: lng, radius: (value["radiusMeters"] as? NSNumber)?.intValue ?? 250) }
     func setDestination(direction: String, lat: Double, lng: Double, radius: Int) async throws { _ = try await rpc("admin_set_destination", body: ["p_direction": direction, "p_lat": lat, "p_lng": lng, "p_radius_meters": radius]) }
     func resetPassword(userId: String, password: String) async throws { _ = try await rpc("admin_reset_password", body: ["p_user_id": userId, "p_new_password": password]) }
     func createCodes(group: String, count: Int) async throws -> [String] { let data = try await rpc("admin_create_codes", body: ["p_group": group, "p_count": count]); if let rows = try? decoder.decode([[String: String]].self, from: data) { return rows.compactMap { $0["new_code"] } }; return [] }
@@ -49,7 +49,7 @@ struct NativeAdminService {
 @MainActor
 final class NativeAdminViewModel: ObservableObject {
     @Published var date: String; @Published var attendance: [NativeAdminAttendance] = []; @Published var subscriptions: [NativeAdminSubscription] = []; @Published var reports: [NativeChatReport] = []; @Published var codes: [String] = []
-    @Published var seatCapacity = 100; @Published var outboundDestination: NativeDestination?; @Published var returnDestination: NativeDestination?
+    @Published var seatCapacity = 100; @Published var outboundDestination: NativeAdminDestination?; @Published var returnDestination: NativeAdminDestination?
     @Published var busy = false; @Published var error: String?; @Published var message: String?
     let service: NativeAdminService
     init(service: NativeAdminService) { self.service = service; date = Self.today(offset: 1) }
