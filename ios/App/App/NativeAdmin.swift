@@ -2,65 +2,44 @@ import Foundation
 import SwiftUI
 
 struct NativeAdminAttendance: Decodable, Identifiable {
-    let userId: String
-    let outbound: Bool
-    let returnTrip: Bool
-    let fullName: String?
-    let phone: String?
-    let groupType: String?
+    let userId: String; let outbound: Bool; let returnTrip: Bool; let fullName: String?; let phone: String?; let groupType: String?
     var id: String { userId }
     enum CodingKeys: String, CodingKey { case userId = "user_id", outbound, returnTrip = "return_trip", profile = "profiles" }
     enum ProfileKeys: String, CodingKey { case fullName = "full_name", phone, groupType = "group_type" }
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        userId = try c.decode(String.self, forKey: .userId); outbound = try c.decode(Bool.self, forKey: .outbound); returnTrip = try c.decode(Bool.self, forKey: .returnTrip)
-        let p = try? c.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profile); fullName = try? p?.decode(String.self, forKey: .fullName); phone = try? p?.decode(String.self, forKey: .phone); groupType = try? p?.decode(String.self, forKey: .groupType)
-    }
+    init(from decoder: Decoder) throws { let c = try decoder.container(keyedBy: CodingKeys.self); userId = try c.decode(String.self, forKey: .userId); outbound = try c.decode(Bool.self, forKey: .outbound); returnTrip = try c.decode(Bool.self, forKey: .returnTrip); let p = try? c.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profile); fullName = try? p?.decode(String.self, forKey: .fullName); phone = try? p?.decode(String.self, forKey: .phone); groupType = try? p?.decode(String.self, forKey: .groupType) }
 }
 
 struct NativeAdminSubscription: Decodable, Identifiable {
-    let id: String
-    let status: String
-    let userId: String
-    let endDate: String?
-    let fullName: String?
-    let phone: String?
-    let groupType: String?
+    let id: String; let status: String; let userId: String; let endDate: String?; let fullName: String?; let phone: String?; let groupType: String?
     enum CodingKeys: String, CodingKey { case id, status, userId = "user_id", endDate = "end_date", profile = "profiles" }
     enum ProfileKeys: String, CodingKey { case fullName = "full_name", phone, groupType = "group_type" }
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self); id = try c.decode(String.self, forKey: .id); status = try c.decode(String.self, forKey: .status); userId = try c.decode(String.self, forKey: .userId); endDate = try? c.decode(String.self, forKey: .endDate)
-        let p = try? c.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profile); fullName = try? p?.decode(String.self, forKey: .fullName); phone = try? p?.decode(String.self, forKey: .phone); groupType = try? p?.decode(String.self, forKey: .groupType)
-    }
+    init(from decoder: Decoder) throws { let c = try decoder.container(keyedBy: CodingKeys.self); id = try c.decode(String.self, forKey: .id); status = try c.decode(String.self, forKey: .status); userId = try c.decode(String.self, forKey: .userId); endDate = try? c.decode(String.self, forKey: .endDate); let p = try? c.nestedContainer(keyedBy: ProfileKeys.self, forKey: .profile); fullName = try? p?.decode(String.self, forKey: .fullName); phone = try? p?.decode(String.self, forKey: .phone); groupType = try? p?.decode(String.self, forKey: .groupType) }
 }
 
 struct NativeChatReport: Codable, Identifiable {
-    let messageId: String
-    let displayName: String
-    let body: String
-    let createdAt: String
-    let reportCount: Int
+    let messageId: String; let displayName: String; let body: String; let createdAt: String; let reportCount: Int
     var id: String { messageId }
     enum CodingKeys: String, CodingKey { case messageId = "message_id", displayName = "display_name", body, createdAt = "created_at", reportCount = "report_count" }
 }
 
+struct NativeDestination { let lat: Double; let lng: Double; let radius: Int }
+
 struct NativeAdminService {
-    let client: NativeSupabaseClient
-    let accessToken: String
-    let decoder = JSONDecoder()
+    let client: NativeSupabaseClient; let accessToken: String; let decoder = JSONDecoder()
     func attendance(date: String) async throws -> [NativeAdminAttendance] { try await list("/rest/v1/daily_attendance?attendance_date=eq.\(date)&select=user_id,outbound,return_trip,profiles(full_name,phone,group_type)") }
     func subscriptions() async throws -> [NativeAdminSubscription] { try await list("/rest/v1/subscriptions?select=id,status,user_id,end_date,profiles(full_name,phone,group_type)&order=created_at.desc&limit=100") }
     func updateSubscription(id: String, status: String) async throws { _ = try await rpc("admin_set_subscription_status", body: ["p_subscription_id": id, "p_status": status]) }
     func updateEndDate(id: String, date: String) async throws { _ = try await raw("/rest/v1/subscriptions?id=eq.\(id)", method: "PATCH", body: ["end_date": date]) }
     func renewSubscription(id: String, days: Int = 30) async throws { _ = try await rpc("admin_renew_subscription", body: ["p_subscription_id": id, "p_days": days]) }
+    func seatCapacity() async throws -> Int { let data = try await raw("/rest/v1/system_settings?key=eq.seat_capacity&select=value&limit=1"); let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]; return (rows?.first?["value"] as? NSNumber)?.intValue ?? 100 }
     func setSeatCapacity(_ capacity: Int) async throws { _ = try await rpc("admin_set_seat_capacity", body: ["p_capacity": capacity]) }
+    func destination(direction: String) async throws -> NativeDestination? { let key = direction == "outbound" ? "arrival_destination_outbound" : "arrival_destination_return"; let data = try await raw("/rest/v1/system_settings?key=eq.\(key)&select=value&limit=1"); guard let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]], let value = rows.first?["value"] as? [String: Any], let lat = (value["lat"] as? NSNumber)?.doubleValue, let lng = (value["lng"] as? NSNumber)?.doubleValue else { return nil }; return NativeDestination(lat: lat, lng: lng, radius: (value["radiusMeters"] as? NSNumber)?.intValue ?? 250) }
     func setDestination(direction: String, lat: Double, lng: Double, radius: Int) async throws { _ = try await rpc("admin_set_destination", body: ["p_direction": direction, "p_lat": lat, "p_lng": lng, "p_radius_meters": radius]) }
     func resetPassword(userId: String, password: String) async throws { _ = try await rpc("admin_reset_password", body: ["p_user_id": userId, "p_new_password": password]) }
     func createCodes(group: String, count: Int) async throws -> [String] { let data = try await rpc("admin_create_codes", body: ["p_group": group, "p_count": count]); if let rows = try? decoder.decode([[String: String]].self, from: data) { return rows.compactMap { $0["new_code"] } }; return [] }
     func reports(room: String) async throws -> [NativeChatReport] { try await rpcDecode("admin_list_student_chat_reports", body: ["p_room": room, "p_limit": 100]) }
     func deleteMessage(room: String, messageId: String) async throws { _ = try await rpc("admin_delete_student_chat_message", body: ["p_room": room, "p_message_id": messageId]) }
     func createAnnouncement(title: String, message: String, target: String?) async throws { _ = try await raw("/rest/v1/announcements", method: "POST", body: ["title": title, "message": message, "target_group": target as Any]) }
-    func hideAnnouncement(id: Int) async throws { _ = try await raw("/rest/v1/announcements?id=eq.\(id)", method: "PATCH", body: ["is_active": false]) }
     private func list<T: Decodable>(_ path: String) async throws -> [T] { try decoder.decode([T].self, from: try await raw(path)) }
     private func rpcDecode<T: Decodable>(_ name: String, body: Any) async throws -> [T] { try decoder.decode([T].self, from: try await rpc(name, body: body)) }
     private func rpc(_ name: String, body: Any) async throws -> Data { try await raw("/rest/v1/rpc/\(name)", method: "POST", body: body) }
@@ -69,40 +48,39 @@ struct NativeAdminService {
 
 @MainActor
 final class NativeAdminViewModel: ObservableObject {
-    @Published var date: String
-    @Published var attendance: [NativeAdminAttendance] = []
-    @Published var subscriptions: [NativeAdminSubscription] = []
-    @Published var reports: [NativeChatReport] = []
-    @Published var codes: [String] = []
-    @Published var busy = false
-    @Published var error: String?
-    @Published var message: String?
+    @Published var date: String; @Published var attendance: [NativeAdminAttendance] = []; @Published var subscriptions: [NativeAdminSubscription] = []; @Published var reports: [NativeChatReport] = []; @Published var codes: [String] = []
+    @Published var seatCapacity = 100; @Published var outboundDestination: NativeDestination?; @Published var returnDestination: NativeDestination?
+    @Published var busy = false; @Published var error: String?; @Published var message: String?
     let service: NativeAdminService
-    init(service: NativeAdminService) { self.service = service; date = NativeAdminViewModel.today(offset: 1) }
-    func loadAttendance() async { do { attendance = try await service.attendance(date: date) } catch { self.error = error.localizedDescription } }
-    func loadSubscriptions() async { do { subscriptions = try await service.subscriptions() } catch { self.error = error.localizedDescription } }
-    func loadReports(room: String) async { do { reports = try await service.reports(room: room) } catch { self.error = error.localizedDescription } }
-    func toggle(_ item: NativeAdminSubscription) async { busy = true; defer { busy = false }; do { try await service.updateSubscription(id: item.id, status: item.status == "active" ? "suspended" : "active"); message = "تم تحديث الاشتراك"; await loadSubscriptions() } catch { self.error = error.localizedDescription } }
-    func makeCodes(group: String, count: Int) async { busy = true; defer { busy = false }; do { codes = try await service.createCodes(group: group, count: count); message = "تم إنشاء الرموز" } catch { self.error = error.localizedDescription } }
-    func remove(report: NativeChatReport, room: String) async { do { try await service.deleteMessage(room: room, messageId: report.messageId); reports.removeAll { $0.id == report.id }; message = "تم حذف الرسالة" } catch { self.error = error.localizedDescription } }
+    init(service: NativeAdminService) { self.service = service; date = Self.today(offset: 1) }
+    func loadAttendance() async { do { attendance = try await service.attendance(date: date) } catch { error = error.localizedDescription } }
+    func loadSubscriptions() async { do { subscriptions = try await service.subscriptions() } catch { error = error.localizedDescription } }
+    func loadSettings() async { do { seatCapacity = try await service.seatCapacity(); outboundDestination = try await service.destination(direction: "outbound"); returnDestination = try await service.destination(direction: "return") } catch { error = error.localizedDescription } }
+    func toggle(_ item: NativeAdminSubscription) async { busy = true; defer { busy = false }; do { try await service.updateSubscription(id: item.id, status: item.status == "active" ? "suspended" : "active"); message = "تم تحديث حالة الاشتراك"; await loadSubscriptions() } catch { error = error.localizedDescription } }
+    func renew(_ item: NativeAdminSubscription, days: Int = 30) async { busy = true; defer { busy = false }; do { try await service.renewSubscription(id: item.id, days: days); message = "تم تجديد الاشتراك لمدة \(days) يوماً"; await loadSubscriptions() } catch { error = error.localizedDescription } }
+    func saveCapacity() async { busy = true; defer { busy = false }; do { try await service.setSeatCapacity(seatCapacity); message = "تم حفظ سعة الكوستر: \(seatCapacity) مقعد" } catch { error = error.localizedDescription } }
+    func saveDestination(direction: String, lat: String, lng: String, radius: String) async { guard let lat = Double(lat), let lng = Double(lng), let radius = Int(radius) else { error = "أدخل إحداثيات صحيحة ونصف قطر بالأمتار."; return }; busy = true; defer { busy = false }; do { try await service.setDestination(direction: direction, lat: lat, lng: lng, radius: radius); message = direction == "outbound" ? "تم حفظ وجهة الذهاب" : "تم حفظ وجهة العودة"; await loadSettings() } catch { error = error.localizedDescription } }
+    func loadReports(room: String) async { do { reports = try await service.reports(room: room) } catch { error = error.localizedDescription } }
+    func makeCodes(group: String, count: Int) async { busy = true; defer { busy = false }; do { codes = try await service.createCodes(group: group, count: count); message = "تم إنشاء الرموز" } catch { error = error.localizedDescription } }
+    func remove(report: NativeChatReport, room: String) async { do { try await service.deleteMessage(room: room, messageId: report.messageId); reports.removeAll { $0.id == report.id }; message = "تم حذف الرسالة" } catch { error = error.localizedDescription } }
     static func today(offset: Int) -> String { let f = DateFormatter(); f.calendar = Calendar(identifier: .gregorian); f.timeZone = TimeZone(identifier: "Asia/Baghdad"); f.dateFormat = "yyyy-MM-dd"; return f.string(from: Calendar.current.date(byAdding: .day, value: offset, to: Date())!) }
 }
 
 struct NativeAdminDashboard: View {
-    @EnvironmentObject private var state: AppState
-    @StateObject private var model: NativeAdminViewModel
-    @State private var tab = 0
-    @State private var group = "boys"
-    @State private var count = 1
-    @State private var announcementTitle = ""
-    @State private var announcementMessage = ""
+    @EnvironmentObject private var state: AppState; @StateObject private var model: NativeAdminViewModel
+    @State private var tab = 0; @State private var group = "boys"; @State private var count = 1; @State private var announcementTitle = ""; @State private var announcementMessage = ""
+    @State private var destinationDirection = "outbound"; @State private var destinationLat = ""; @State private var destinationLng = ""; @State private var destinationRadius = "250"
     init(service: NativeAdminService) { _model = StateObject(wrappedValue: NativeAdminViewModel(service: service)) }
-    var body: some View {
-        TabView(selection: $tab) { attendance.tabItem { Label("الحضور", systemImage: "person.3.fill") }.tag(0); subscriptions.tabItem { Label("المشتركون", systemImage: "person.crop.circle") }.tag(1); tools.tabItem { Label("الأدوات", systemImage: "wrench.and.screwdriver.fill") }.tag(2) }.environment(\.layoutDirection, .rightToLeft).task { await model.loadAttendance(); await model.loadSubscriptions() }.alert("لوحة المشرف", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) { Button("حسناً", role: .cancel) {} } message: { Text(model.error ?? "") }.alert("تم", isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) { Button("حسناً", role: .cancel) {} } message: { Text(model.message ?? "") }
-    }
-    private var attendance: some View { NavigationView { List { DatePicker("تاريخ الرحلة", selection: Binding(get: { dateValue(model.date) }, set: { model.date = stringDate($0); Task { await model.loadAttendance() } }), displayedComponents: .date); Section("إحصاءات") { Text("ذهاب: \(model.attendance.filter { $0.outbound }.count) · عودة: \(model.attendance.filter { $0.returnTrip }.count)") }; Section("الركاب") { ForEach(model.attendance) { row in HStack { VStack(alignment: .trailing) { Text(row.fullName ?? "بدون اسم"); Text(row.phone ?? "").font(.caption).foregroundStyle(.secondary) }; Spacer(); Text(row.outbound && row.returnTrip ? "ذهاب وعودة" : row.outbound ? "ذهاب" : row.returnTrip ? "عودة" : "لا يداوم").font(.caption) } } } }.navigationTitle("الحضور") }.navigationViewStyle(.stack) }
-    private var subscriptions: some View { NavigationView { List(model.subscriptions) { item in VStack(alignment: .trailing) { HStack { Text(item.fullName ?? "بدون اسم"); Spacer(); Text(item.status == "active" ? "فعال" : "موقوف").foregroundStyle(item.status == "active" ? .green : .red) }; Text(item.phone ?? "").font(.caption); if let endDate = item.endDate { Text("ينتهي: \(endDate)").font(.caption).foregroundStyle(.secondary) }; HStack { Button(item.status == "active" ? "إيقاف" : "تفعيل") { Task { await model.toggle(item) } }; Button("سجل") { } } } }.navigationTitle("المشتركون") }.navigationViewStyle(.stack) }
-    private var tools: some View { NavigationView { ScrollView { VStack(alignment: .trailing, spacing: 16) { NativeCard(title: "مشاركة الموقع") { Button { state.toggleLocation() } label: { Label(state.locationSharing ? "إيقاف المشاركة" : "بدء مشاركة الموقع", systemImage: "location.fill") } }; NativeCard(title: "رموز الاشتراك") { Picker("المجموعة", selection: $group) { Text("الشباب").tag("boys"); Text("البنات").tag("girls") }.pickerStyle(.segmented); Stepper("العدد: \(count)", value: $count, in: 1...100); Button("إنشاء الرموز") { Task { await model.makeCodes(group: group, count: count) } }; if !model.codes.isEmpty { Text(model.codes.joined(separator: "\n")).font(.system(.body, design: .monospaced)).textSelection(.enabled) } }; NativeCard(title: "إرسال تنبيه") { TextField("العنوان", text: $announcementTitle).textFieldStyle(.roundedBorder); TextEditor(text: $announcementMessage).frame(height: 90).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.3))); Button("نشر التنبيه") { Task { do { try await model.service.createAnnouncement(title: announcementTitle, message: announcementMessage, target: nil); model.message = "تم نشر التنبيه"; announcementTitle = ""; announcementMessage = "" } catch { model.error = error.localizedDescription } } }.disabled(announcementTitle.isEmpty || announcementMessage.isEmpty) }; NativeCard(title: "بلاغات الدردشة") { Picker("الغرفة", selection: $group) { Text("الشباب").tag("boys"); Text("البنات").tag("girls") }.pickerStyle(.segmented); Button("تحميل البلاغات") { Task { await model.loadReports(room: group) } }; ForEach(model.reports) { report in VStack(alignment: .trailing) { Text("\(report.displayName) · \(report.reportCount) بلاغ").font(.headline); Text(report.body); Button("حذف الرسالة") { Task { await model.remove(report: report, room: group) } }.foregroundStyle(.red) }.padding(.vertical, 6) } } }.padding() }.navigationTitle("أدوات المشرف") }.navigationViewStyle(.stack) }
+    var body: some View { TabView(selection: $tab) { attendance.tabItem { Label("الحضور", systemImage: "person.3.fill") }.tag(0); subscriptions.tabItem { Label("المشتركون", systemImage: "person.crop.circle") }.tag(1); tools.tabItem { Label("الإدارة", systemImage: "slider.horizontal.3") }.tag(2) }.environment(\.layoutDirection, .rightToLeft).task { await model.loadAttendance(); await model.loadSubscriptions(); await model.loadSettings() }.alert("لوحة المشرف", isPresented: Binding(get: { model.error != nil }, set: { if !$0 { model.error = nil } })) { Button("حسناً", role: .cancel) {} } message: { Text(model.error ?? "") }.alert("تم", isPresented: Binding(get: { model.message != nil }, set: { if !$0 { model.message = nil } })) { Button("حسناً", role: .cancel) {} } message: { Text(model.message ?? "") } }
+    private var attendance: some View { NavigationView { List { DatePicker("تاريخ الرحلة", selection: Binding(get: { dateValue(model.date) }, set: { model.date = stringDate($0); Task { await model.loadAttendance() } }), displayedComponents: .date); Section("إحصاءات") { Text("ذهاب: \(model.attendance.filter { $0.outbound }.count) · عودة: \(model.attendance.filter { $0.returnTrip }.count) · السعة: \(model.seatCapacity)") }; Section("الركاب") { ForEach(model.attendance) { row in HStack { VStack(alignment: .trailing) { Text(row.fullName ?? "بدون اسم"); Text(row.phone ?? "").font(.caption).foregroundStyle(.secondary) }; Spacer(); Text(row.outbound && row.returnTrip ? "ذهاب وعودة" : row.outbound ? "ذهاب" : row.returnTrip ? "عودة" : "لا يداوم").font(.caption) } } } }.navigationTitle("الحضور") }.navigationViewStyle(.stack) }
+    private var subscriptions: some View { NavigationView { List(model.subscriptions) { item in VStack(alignment: .trailing, spacing: 7) { HStack { Text(item.fullName ?? "بدون اسم"); Spacer(); Text(item.status == "active" ? "فعال" : "موقوف").foregroundStyle(item.status == "active" ? .green : .red) }; Text(item.phone ?? "").font(.caption); Text(item.endDate.map { "ينتهي: \($0)" } ?? "بدون تاريخ انتهاء").font(.caption).foregroundStyle(.secondary); HStack { Button(item.status == "active" ? "إيقاف" : "تفعيل") { Task { await model.toggle(item) } }; Button("تجديد 30 يوم") { Task { await model.renew(item) } }.disabled(model.busy) } } }.navigationTitle("المشتركون") }.navigationViewStyle(.stack) }
+    private var tools: some View { NavigationView { ScrollView { VStack(alignment: .trailing, spacing: 16) { locationCard; capacityCard; destinationCard; codesCard; announcementCard; reportsCard }.padding() }.navigationTitle("إدارة الكوستر") }.navigationViewStyle(.stack) }
+    private var locationCard: some View { NativeCard(title: "مشاركة موقع الكوستر") { Button { state.toggleLocation() } label: { Label(state.locationSharing ? "إيقاف المشاركة" : "بدء مشاركة الموقع", systemImage: state.locationSharing ? "location.slash.fill" : "location.fill") }; Text(state.locationSharing ? "الموقع يُحدّث الطلاب لحظياً" : "غير مشارك مع الطلاب").font(.caption).foregroundStyle(.secondary) } }
+    private var capacityCard: some View { NativeCard(title: "سعة المقاعد") { Stepper("السعة: \(model.seatCapacity) مقعد", value: $model.seatCapacity, in: 1...10000); Button("حفظ السعة") { Task { await model.saveCapacity() } }.disabled(model.busy) } }
+    private var destinationCard: some View { NativeCard(title: "وجهات تذكير الوصول") { Picker("الاتجاه", selection: $destinationDirection) { Text("الذهاب").tag("outbound"); Text("العودة").tag("return") }.pickerStyle(.segmented).onChange(of: destinationDirection) { direction in let d = direction == "outbound" ? model.outboundDestination : model.returnDestination; destinationLat = d.map { String($0.lat) } ?? ""; destinationLng = d.map { String($0.lng) } ?? ""; destinationRadius = d.map { String($0.radius) } ?? "250" }; TextField("خط العرض Latitude", text: $destinationLat).keyboardType(.numbersAndPunctuation).textFieldStyle(.roundedBorder); TextField("خط الطول Longitude", text: $destinationLng).keyboardType(.numbersAndPunctuation).textFieldStyle(.roundedBorder); TextField("نصف القطر بالمتر", text: $destinationRadius).keyboardType(.numberPad).textFieldStyle(.roundedBorder); Button("حفظ الوجهة") { Task { await model.saveDestination(direction: destinationDirection, lat: destinationLat, lng: destinationLng, radius: destinationRadius) } }.disabled(model.busy); Text("تُستخدم الوجهة لتذكير الطالب عند الاقتراب منها.").font(.caption).foregroundStyle(.secondary) } }
+    private var codesCard: some View { NativeCard(title: "رموز الاشتراك") { Picker("المجموعة", selection: $group) { Text("الشباب").tag("boys"); Text("البنات").tag("girls") }.pickerStyle(.segmented); Stepper("العدد: \(count)", value: $count, in: 1...100); Button("إنشاء الرموز") { Task { await model.makeCodes(group: group, count: count) } }; if !model.codes.isEmpty { Text(model.codes.joined(separator: "\n")).font(.system(.body, design: .monospaced)).textSelection(.enabled) } } }
+    private var announcementCard: some View { NativeCard(title: "إرسال تنبيه") { TextField("العنوان", text: $announcementTitle).textFieldStyle(.roundedBorder); TextEditor(text: $announcementMessage).frame(height: 90).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.3))); Button("نشر التنبيه") { Task { do { try await model.service.createAnnouncement(title: announcementTitle, message: announcementMessage, target: nil); model.message = "تم نشر التنبيه"; announcementTitle = ""; announcementMessage = "" } catch { model.error = error.localizedDescription } } }.disabled(announcementTitle.isEmpty || announcementMessage.isEmpty) } }
+    private var reportsCard: some View { NativeCard(title: "بلاغات الدردشة") { Picker("الغرفة", selection: $group) { Text("الشباب").tag("boys"); Text("البنات").tag("girls") }.pickerStyle(.segmented); Button("تحميل البلاغات") { Task { await model.loadReports(room: group) } }; ForEach(model.reports) { report in VStack(alignment: .trailing) { Text("\(report.displayName) · \(report.reportCount) بلاغ").font(.headline); Text(report.body); Button("حذف الرسالة") { Task { await model.remove(report: report, room: group) } }.foregroundStyle(.red) }.padding(.vertical, 6) } } }
     private func dateValue(_ value: String) -> Date { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = TimeZone(identifier: "Asia/Baghdad"); return f.date(from: value) ?? Date() }
     private func stringDate(_ value: Date) -> String { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.timeZone = TimeZone(identifier: "Asia/Baghdad"); return f.string(from: value) }
 }
