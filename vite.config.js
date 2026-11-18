@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react()],
-  // The public site uses a custom domain, so browser assets must resolve from the domain root.
-  base: mode === 'android' || mode === 'ios' ? './' : '/',
+  // Relative asset paths work at the custom-domain root and under the GitHub Pages project path.
+  base: './',
   build: {
     rollupOptions: {
       output: {
@@ -16,4 +16,4 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-}));
+});
