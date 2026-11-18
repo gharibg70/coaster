@@ -4,10 +4,12 @@ import { readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+
 const root = fileURLToPath(new URL('..', import.meta.url));
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const supabaseSource = readFileSync(new URL('../src/lib/supabase.js', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+
 
 test('capacitor_config_uses_approved_app_id_and_dist', () => {
   const configPath = new URL('../capacitor.config.json', import.meta.url);
@@ -18,12 +20,14 @@ test('capacitor_config_uses_approved_app_id_and_dist', () => {
   assert.equal(config.webDir, 'dist');
 });
 
-test('android_build_script_generates_relative_asset_urls_and_custom_pages_use_root_assets', () => {
+
+test('android_and_web_builds_generate_relative_asset_urls_for_all_pages_paths', () => {
   assert.equal(typeof packageJson.scripts['build:android'], 'string');
   execFileSync('npx', ['vite', 'build', '--mode', 'android'], { cwd: root, stdio: 'pipe' });
   const html = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
-  assert.match(html, /(?:src|href)="\.\/assets\//, 'Android bundle URLs must be relative');
-  assert.doesNotMatch(html, /(?:src|href)="\/assets\//, 'Android bundle must not use root-absolute URLs');
+  assert.ok(html.includes('src="./assets/') || html.includes('href="./assets/'), 'Android bundle URLs must be relative');
+  assert.ok(!html.includes('src="/assets/') && !html.includes('href="/assets/'), 'Android bundle must not use root-absolute URLs');
+
 
   execFileSync('npx', ['vite', 'build'], {
     cwd: root,
@@ -31,25 +35,30 @@ test('android_build_script_generates_relative_asset_urls_and_custom_pages_use_ro
     env: { ...process.env, GITHUB_ACTIONS: 'true' },
   });
   const pagesHtml = readFileSync(new URL('../dist/index.html', import.meta.url), 'utf8');
-  assert.match(pagesHtml, /(?:src|href)="\/assets\//, 'Custom-domain Pages assets must use the domain root');
-  assert.doesNotMatch(pagesHtml, /(?:src|href)="\/coaster-react-vite\/assets\//, 'Pages must not use the legacy repository path');
+  assert.ok(pagesHtml.includes('src="./assets/') || pagesHtml.includes('href="./assets/'), 'Web assets must be relative so they work at both the custom-domain root and /coaster/');
+  assert.ok(!pagesHtml.includes('src="/assets/') && !pagesHtml.includes('href="/assets/'), 'Web assets must not escape the GitHub Pages project path');
+  assert.ok(!pagesHtml.includes('/coaster-react-vite/assets/'), 'Pages must not use the legacy repository path');
 });
+
 
 test('supabase_client_disables_redirect_session_detection_for_capacitor', () => {
-  assert.match(supabaseSource, /detectSessionInUrl:\s*false/);
-  assert.match(supabaseSource, /persistSession:\s*true/);
-  assert.match(supabaseSource, /autoRefreshToken:\s*true/);
+  assert.ok(supabaseSource.includes('detectSessionInUrl: false'));
+  assert.ok(supabaseSource.includes('persistSession: true'));
+  assert.ok(supabaseSource.includes('autoRefreshToken: true'));
 });
 
+
 test('app_does_not_process_supabase_initial_session_twice', () => {
-  assert.match(appSource, /event === 'INITIAL_SESSION'/);
-  assert.match(appSource, /getSession\(\)/);
+  assert.ok(appSource.includes("event === 'INITIAL_SESSION'"));
+  assert.ok(appSource.includes('getSession()'));
 });
+
 
 test('android_manifest_requests_precise_and_approximate_location_only_in_foreground', () => {
   const manifest = readFileSync(new URL('../android/app/src/main/AndroidManifest.xml', import.meta.url), 'utf8');
-  assert.match(manifest, /android\.permission\.ACCESS_COARSE_LOCATION/);
-  assert.match(manifest, /android\.permission\.ACCESS_FINE_LOCATION/);
-  assert.doesNotMatch(manifest, /ACCESS_BACKGROUND_LOCATION/);
-  assert.doesNotMatch(manifest, /FOREGROUND_SERVICE_LOCATION/);
+  assert.ok(manifest.includes('android.permission.ACCESS_COARSE_LOCATION'));
+  assert.ok(manifest.includes('android.permission.ACCESS_FINE_LOCATION'));
+  assert.ok(!manifest.includes('ACCESS_BACKGROUND_LOCATION'));
+  assert.ok(!manifest.includes('FOREGROUND_SERVICE_LOCATION'));
 });
+
