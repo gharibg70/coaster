@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { signIn, signUp } from './authService.js';
+import { getAuthIdentifierFieldConfig } from '../authIdentifierField.js';
 
 export default function AuthView({ busy, onSubmit }) {
   const [register, setRegister] = useState(false);
+  const { label: identifierLabel, ...identifierInputProps } = getAuthIdentifierFieldConfig(register);
   const submit = (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -14,7 +16,7 @@ export default function AuthView({ busy, onSubmit }) {
     <div className="auth-hero"><div className="logo"><i className="fa-solid fa-bus" /></div><h1>كوستر الجامعة</h1><p className="mu">دهوك ⟷ الموصل · احجز مقعدك بسهولة</p></div>
     <form className="card" onSubmit={submit}><h2><i className="fa-solid fa-user-lock" /> {register ? 'حساب جديد' : 'تسجيل الدخول'}</h2>
       {register && <><label>الاسم الكامل</label><input name="name" autoComplete="name" placeholder="مثال: أحمد محمد" required /></>}
-      <label>رقم الهاتف</label><input name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="07XXXXXXXXX" required />
+      <label htmlFor="auth-identifier">{identifierLabel}</label><input id="auth-identifier" name="phone" {...identifierInputProps} dir="ltr" required />
       <label>كلمة المرور</label><input name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} minLength={6} placeholder="••••••" required />
       {register && <><label>رمز الاشتراك</label><input name="code" dir="ltr" placeholder="BUS-XXXX" required /><p className="mu">يعطيك صاحب الكوستر رمزاً خاصاً بك.</p></>}
       <button type="submit" disabled={busy} className="full">{busy ? 'جارٍ التنفيذ…' : register ? 'إنشاء الحساب' : 'دخول'}</button>
